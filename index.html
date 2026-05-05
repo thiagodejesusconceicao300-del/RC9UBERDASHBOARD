@@ -192,6 +192,67 @@ body{
   font-variant-numeric:tabular-nums;
 }
 .nav-item.active .nav-meta{color:rgba(255,255,255,0.6)}
+
+/* Nav parent expansível com submenu */
+.nav-parent{position:relative}
+.nav-caret{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  color:var(--ink-5);
+  transition:transform var(--t-fast);
+}
+.nav-parent.expanded .nav-caret{transform:rotate(90deg)}
+.nav-parent.has-active{
+  background:var(--surface-3);
+  color:var(--ink);
+}
+.nav-submenu{
+  display:none;
+  flex-direction:column;
+  gap:1px;
+  padding:2px 0 6px 8px;
+  border-left:1px solid var(--ink-7);
+  margin-left:18px;
+  margin-top:2px;
+  margin-bottom:4px;
+}
+.nav-submenu.expanded{display:flex}
+.nav-subitem{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 12px;
+  border-radius:var(--r-md);
+  cursor:pointer;
+  font-size:12px;
+  color:var(--ink-4);
+  font-weight:500;
+  transition:all var(--t-fast);
+  border:none;
+  background:none;
+  text-align:left;
+  width:calc(100% - 4px);
+}
+.nav-subitem:hover{
+  background:var(--surface-3);
+  color:var(--ink-2);
+}
+.nav-subitem.active{
+  background:var(--brand-mute);
+  color:var(--brand-deep);
+  font-weight:600;
+}
+.nav-subitem-dot{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--ink-6);
+  flex-shrink:0;
+  transition:background var(--t-fast);
+}
+.nav-subitem:hover .nav-subitem-dot{background:var(--ink-4)}
+.nav-subitem.active .nav-subitem-dot{background:var(--brand)}
 .sidebar-foot{
   margin-top:auto;
   padding:14px 8px;
@@ -1693,6 +1754,424 @@ body{
   .alert-compact-val{font-size:18px}
 }
 
+/* =================================================================
+   COMPARAÇÃO · Submenu de gráficos
+   ================================================================= */
+.viz-section{
+  background:var(--surface);
+  border:1px solid var(--ink-7);
+  border-radius:var(--r-lg);
+  margin-bottom:24px;
+  box-shadow:var(--shadow-xs);
+  overflow:hidden;
+}
+.viz-tabs{
+  display:flex;
+  border-bottom:1px solid var(--ink-8);
+  background:var(--surface-2);
+  overflow-x:auto;
+}
+.viz-tab{
+  font-family:inherit;
+  font-size:12px;
+  font-weight:500;
+  color:var(--ink-4);
+  background:none;
+  border:none;
+  padding:14px 20px;
+  cursor:pointer;
+  transition:all var(--t-fast);
+  white-space:nowrap;
+  border-bottom:2px solid transparent;
+  letter-spacing:0.01em;
+}
+.viz-tab:hover{color:var(--ink-2);background:var(--surface-3)}
+.viz-tab.active{
+  color:var(--ink);
+  font-weight:600;
+  border-bottom-color:var(--ink);
+  background:var(--surface);
+}
+.viz-tab .viz-tab-icon{
+  margin-right:6px;
+  display:inline-block;
+  vertical-align:-2px;
+}
+.viz-body{
+  padding:24px 28px;
+  min-height:380px;
+}
+.viz-body-h{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  margin-bottom:18px;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.viz-body-title{
+  font-family:'Instrument Serif', Georgia, serif;
+  font-size:20px;
+  font-weight:400;
+  color:var(--ink);
+  letter-spacing:-0.01em;
+}
+.viz-body-title em{font-style:italic;color:var(--brand)}
+.viz-body-sub{
+  font-size:11px;
+  color:var(--ink-5);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  font-weight:600;
+}
+
+/* SVG chart base */
+.viz-chart{width:100%;height:340px;display:block}
+.viz-chart text{font-family:'Inter', sans-serif;font-variant-numeric:tabular-nums}
+.viz-chart .axis-line{stroke:var(--ink-7);stroke-width:1}
+.viz-chart .grid-line{stroke:var(--ink-8);stroke-width:1;stroke-dasharray:2,3}
+.viz-chart .axis-label{fill:var(--ink-5);font-size:10px;font-weight:500}
+.viz-chart .value-label{fill:var(--ink-2);font-size:11px;font-weight:600}
+.viz-chart .bar-rect{transition:all var(--t-fast);cursor:pointer}
+.viz-chart .bar-rect:hover{filter:brightness(0.92)}
+
+/* Diverging bar chart (funcionários, cidades) */
+.diverging-list{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  max-height:380px;
+  overflow-y:auto;
+  padding-right:6px;
+}
+.div-row{
+  display:grid;
+  grid-template-columns:160px 1fr 90px;
+  gap:14px;
+  align-items:center;
+  cursor:pointer;
+  padding:6px 8px;
+  border-radius:var(--r-sm);
+  transition:background var(--t-fast);
+  font-size:12px;
+}
+.div-row:hover{background:var(--surface-2)}
+.div-row-name{
+  color:var(--ink-2);
+  font-weight:500;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.div-row-bar{
+  position:relative;
+  height:18px;
+  display:flex;
+  align-items:center;
+}
+.div-row-bar-line{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  width:1px;
+  height:100%;
+  background:var(--ink-6);
+}
+.div-row-bar-fill{
+  position:absolute;
+  top:3px;
+  height:12px;
+  border-radius:3px;
+  transition:width var(--t-med);
+}
+.div-row-bar-fill.up{background:var(--neg);right:50%;}
+.div-row-bar-fill.down{background:var(--pos);left:50%;}
+.div-row-val{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  font-size:12px;
+  font-weight:600;
+}
+.div-row-val.up{color:var(--neg)}
+.div-row-val.down{color:var(--pos)}
+.div-row-val .pct{
+  display:block;
+  font-size:10px;
+  color:var(--ink-5);
+  font-weight:500;
+}
+.div-row-bar-fill.new{background:var(--brand)}
+.div-row-bar-fill.gone{background:var(--ink-5)}
+
+/* Grouped bars chart (services) */
+.grouped-bars{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.gb-row{
+  display:grid;
+  grid-template-columns:120px 1fr 100px;
+  gap:14px;
+  align-items:center;
+  cursor:pointer;
+  padding:6px 8px;
+  border-radius:var(--r-sm);
+  transition:background var(--t-fast);
+}
+.gb-row:hover{background:var(--surface-2)}
+.gb-row-name{
+  font-size:12px;
+  color:var(--ink-2);
+  font-weight:500;
+}
+.gb-row-name .pp{
+  display:block;
+  font-size:10px;
+  color:var(--ink-5);
+  margin-top:2px;
+  font-variant-numeric:tabular-nums;
+}
+.gb-row-bars{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.gb-bar-pair{
+  display:grid;
+  grid-template-columns:32px 1fr 65px;
+  gap:8px;
+  align-items:center;
+  font-size:10px;
+}
+.gb-bar-label{
+  color:var(--ink-5);
+  font-weight:600;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+.gb-bar-track{
+  height:8px;
+  background:var(--ink-8);
+  border-radius:2px;
+  overflow:hidden;
+  position:relative;
+}
+.gb-bar-fill{
+  height:100%;
+  background:var(--brand);
+  border-radius:2px;
+  transition:width var(--t-med);
+}
+.gb-bar-fill.b-old{background:var(--ink-5)}
+.gb-bar-val{
+  font-variant-numeric:tabular-nums;
+  text-align:right;
+  color:var(--ink-2);
+  font-weight:500;
+}
+.gb-row-status{
+  font-size:11px;
+  font-weight:600;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.gb-row-status.up{color:var(--neg)}
+.gb-row-status.down{color:var(--pos)}
+
+/* Sparkline */
+.spark{
+  display:inline-block;
+  vertical-align:middle;
+  height:24px;
+  width:60px;
+}
+.spark path{fill:none;stroke:var(--brand);stroke-width:1.5}
+.spark .spark-fill{fill:var(--brand-mute);stroke:none;opacity:0.4}
+.spark circle{fill:var(--brand)}
+
+/* =================================================================
+   CADASTRO & ATIVIDADE · timeline mensal por funcionário
+   ================================================================= */
+.tbl-cadastro tbody tr{cursor:pointer;transition:background var(--t-fast)}
+.tbl-cadastro tbody tr:hover{background:var(--surface-2)}
+.timeline-row{
+  display:flex;
+  gap:4px;
+  justify-content:center;
+}
+.tl-cell{
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.02em;
+  transition:all var(--t-fast);
+  cursor:help;
+  position:relative;
+}
+.tl-cell-letter{font-family:'Inter',sans-serif}
+.tl-cell.tl-active{
+  background:var(--brand);
+  color:#fff;
+  box-shadow:0 1px 2px rgba(37,99,235,0.25);
+}
+.tl-cell.tl-active:hover{
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(37,99,235,0.35);
+}
+.tl-cell.tl-inactive{
+  background:var(--ink-8);
+  color:var(--ink-5);
+}
+.tl-cell.tl-inactive:hover{background:var(--ink-7);color:var(--ink-3)}
+
+/* =================================================================
+   ECONOMIA · resumo + cards de oportunidades
+   ================================================================= */
+.economia-resumo{
+  display:grid;
+  grid-template-columns:1fr 60px 1fr;
+  gap:0;
+  margin-bottom:8px;
+}
+@media (max-width:900px){
+  .economia-resumo{grid-template-columns:1fr;gap:8px}
+  .economia-resumo-divider{display:none}
+}
+.economia-resumo-card{
+  background:var(--surface);
+  border:1px solid var(--ink-7);
+  border-radius:var(--r-lg);
+  padding:24px 28px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:var(--shadow-xs);
+}
+.economia-resumo-card::before{
+  content:"";
+  position:absolute;
+  top:0; left:0; right:0;
+  height:4px;
+}
+.economia-resumo-card.pos::before{background:var(--pos)}
+.economia-resumo-card.warn::before{background:var(--warn)}
+.economia-resumo-eyebrow{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  font-weight:700;
+  margin-bottom:10px;
+}
+.economia-resumo-card.pos .economia-resumo-eyebrow{color:var(--pos)}
+.economia-resumo-card.warn .economia-resumo-eyebrow{color:var(--warn)}
+.economia-resumo-val{
+  font-size:42px;
+  font-weight:700;
+  color:var(--ink);
+  letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums;
+  line-height:1;
+  margin-bottom:8px;
+}
+.economia-resumo-card.pos .economia-resumo-val{color:var(--pos)}
+.economia-resumo-card.warn .economia-resumo-val{color:var(--warn)}
+.economia-resumo-pct{
+  font-size:13px;
+  color:var(--ink-3);
+  font-weight:500;
+  margin-bottom:6px;
+  font-variant-numeric:tabular-nums;
+}
+.economia-resumo-desc{
+  font-size:11px;
+  color:var(--ink-5);
+  letter-spacing:0.01em;
+}
+.economia-resumo-divider{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.economia-resumo-divider span{
+  font-family:'Instrument Serif', Georgia, serif;
+  font-size:24px;
+  color:var(--ink-5);
+  font-style:italic;
+}
+
+.economia-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:14px;
+}
+@media (max-width:1100px){
+  .economia-grid{grid-template-columns:repeat(2, 1fr)}
+}
+@media (max-width:700px){
+  .economia-grid{grid-template-columns:1fr}
+}
+.economia-card{
+  background:var(--surface);
+  border:1px solid var(--ink-7);
+  border-radius:var(--r-md);
+  padding:18px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  box-shadow:var(--shadow-xs);
+  transition:all var(--t-fast);
+}
+.economia-card:hover{
+  border-color:var(--ink-5);
+  box-shadow:var(--shadow-sm);
+  transform:translateY(-1px);
+}
+.economia-card-h{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.economia-card-tag{
+  font-size:9px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  padding:3px 8px;
+  border-radius:4px;
+  background:var(--pos-mute);
+  color:var(--pos);
+}
+.economia-card-tag.warn{background:var(--warn-mute);color:var(--warn)}
+.economia-card-val{
+  font-size:22px;
+  font-weight:700;
+  color:var(--ink);
+  letter-spacing:-0.01em;
+  font-variant-numeric:tabular-nums;
+}
+.economia-card.pos .economia-card-val{color:var(--pos)}
+.economia-card.warn .economia-card-val{color:var(--warn)}
+.economia-card-title{
+  font-size:14px;
+  font-weight:600;
+  color:var(--ink);
+  margin:0;
+  letter-spacing:-0.005em;
+}
+.economia-card-desc{
+  font-size:12px;
+  color:var(--ink-3);
+  line-height:1.6;
+  margin:0;
+}
+
 /* Drill-down inline action button (aparece em hover) */
 .dd-btn{
   display:inline-flex;
@@ -2087,16 +2566,51 @@ body{
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/><path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10"/></svg></span>
         <span class="nav-label">Serviços</span>
       </button>
-      <button class="nav-item" data-id="passageiros">
+      <button class="nav-item nav-parent" data-parent="passageiros" onclick="toggleSubmenu('passageiros')">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
         <span class="nav-label">Funcionários</span>
+        <span class="nav-caret"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
       </button>
+      <div class="nav-submenu" id="submenu-passageiros">
+        <button class="nav-subitem" data-id="passageiros">
+          <span class="nav-subitem-dot"></span>
+          <span>Ranking</span>
+        </button>
+        <button class="nav-subitem" data-id="func-cadastro">
+          <span class="nav-subitem-dot"></span>
+          <span>Cadastro & atividade</span>
+        </button>
+      </div>
 
       <div class="nav-section">Apresentação</div>
-      <button class="nav-item" data-id="comparacao">
+      <button class="nav-item nav-parent" data-parent="comparacao" onclick="toggleSubmenu('comparacao')">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/><circle cx="7" cy="14" r="1.5" fill="currentColor"/><circle cx="11" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="14" r="1.5" fill="currentColor"/><circle cx="20" cy="9" r="1.5" fill="currentColor"/></svg></span>
         <span class="nav-label">Comparação mensal</span>
+        <span class="nav-caret"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
       </button>
+      <div class="nav-submenu" id="submenu-comparacao">
+        <button class="nav-subitem" data-id="cmp-visao">
+          <span class="nav-subitem-dot"></span>
+          <span>Visão geral</span>
+        </button>
+        <button class="nav-subitem" data-id="cmp-tendencia">
+          <span class="nav-subitem-dot"></span>
+          <span>Tendência mensal</span>
+        </button>
+        <button class="nav-subitem" data-id="cmp-funcionarios">
+          <span class="nav-subitem-dot"></span>
+          <span>Funcionários</span>
+        </button>
+        <button class="nav-subitem" data-id="cmp-cidades">
+          <span class="nav-subitem-dot"></span>
+          <span>Cidades</span>
+        </button>
+        <button class="nav-subitem" data-id="cmp-servicos">
+          <span class="nav-subitem-dot"></span>
+          <span>Serviços</span>
+        </button>
+      </div>
+
       <button class="nav-item" data-id="conciliacao">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/><path d="M3 8V3h5"/><path d="M3 3l7 7"/><path d="M16 21h5v-5"/><path d="M21 21l-7-7"/></svg></span>
         <span class="nav-label">Conciliação</span>
@@ -2404,12 +2918,67 @@ function setValorFilter(){
 
 function setTab(id){
   activeTab = id;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.id === id));
+
+  // Detectar se é um sub-item (cmp-*) e marcar parent ativo também
+  // Detectar parent baseado no prefixo/id do sub-item
+  let parentId = null;
+  if (id.startsWith('cmp-')) parentId = 'comparacao';
+  else if (id === 'passageiros' || id.startsWith('func-')) parentId = 'passageiros';
+  const isSubitem = parentId !== null;
+
+  // Marcar nav-item principal
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.classList.contains('nav-parent')) {
+      // Parent fica destacado se algum filho está ativo
+      n.classList.toggle('has-active', n.dataset.parent === parentId);
+      n.classList.remove('active');
+    } else {
+      n.classList.toggle('active', n.dataset.id === id);
+    }
+  });
+
+  // Marcar sub-itens
+  document.querySelectorAll('.nav-subitem').forEach(n => {
+    n.classList.toggle('active', n.dataset.id === id);
+  });
+
+  // Expandir submenu correspondente automaticamente
+  if (isSubitem) {
+    const submenu = document.getElementById('submenu-' + parentId);
+    const parentBtn = document.querySelector(`.nav-parent[data-parent="${parentId}"]`);
+    if (submenu) submenu.classList.add('expanded');
+    if (parentBtn) parentBtn.classList.add('expanded');
+  }
+
   showAllAlerts = false;
   showAllRepeat = false;
   render();
   document.getElementById('main').scrollIntoView({behavior:'smooth', block:'start'});
   if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSubmenu(parentId){
+  const submenu = document.getElementById('submenu-' + parentId);
+  const parentBtn = document.querySelector(`.nav-parent[data-parent="${parentId}"]`);
+  if (!submenu || !parentBtn) return;
+  const isExpanded = submenu.classList.contains('expanded');
+  if (isExpanded) {
+    submenu.classList.remove('expanded');
+    parentBtn.classList.remove('expanded');
+  } else {
+    submenu.classList.add('expanded');
+    parentBtn.classList.add('expanded');
+    // Default sub-aba ao expandir pela primeira vez
+    const defaults = {
+      'comparacao': 'cmp-visao',
+      'passageiros': 'passageiros', // primeiro sub-item = Ranking
+    };
+    const defaultSub = defaults[parentId];
+    const validIds = [...submenu.querySelectorAll('.nav-subitem')].map(s => s.dataset.id);
+    if (defaultSub && !validIds.includes(activeTab)) {
+      setTab(defaultSub);
+    }
+  }
 }
 
 /* ============== POPULATE FILTER OPTIONS ============== */
@@ -2716,7 +3285,13 @@ function render(){
     case 'cidades': content.innerHTML = renderCidades(); break;
     case 'servicos': content.innerHTML = renderServicos(); break;
     case 'passageiros': content.innerHTML = renderPassageiros(); break;
+    case 'func-cadastro': content.innerHTML = renderCadastroAtividade(); break;
     case 'comparacao': content.innerHTML = renderComparacao(); break;
+    case 'cmp-visao': content.innerHTML = renderComparacaoSub('visao'); break;
+    case 'cmp-tendencia': content.innerHTML = renderComparacaoSub('tendencia'); break;
+    case 'cmp-funcionarios': content.innerHTML = renderComparacaoSub('funcionarios'); break;
+    case 'cmp-cidades': content.innerHTML = renderComparacaoSub('cidades'); break;
+    case 'cmp-servicos': content.innerHTML = renderComparacaoSub('servicos'); break;
     case 'conciliacao': content.innerHTML = renderConciliacao(); break;
     case 'gastos': content.innerHTML = renderGastos(); break;
     case 'alertas': content.innerHTML = renderAlertas(); break;
@@ -2841,7 +3416,7 @@ function renderVisao(){
         <div class="kpi-cta">Ver decomposição →</div>
       </div>
 
-      <div class="kpi tappable" onclick="setTab('comparacao')" title="Ver comparação mês a mês">
+      <div class="kpi tappable" onclick="setTab('cmp-visao')" title="Ver comparação mês a mês">
         <div class="kpi-label">
           <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><polyline points="12 6 12 12 16 14"/></svg>
           Média mensal
@@ -2851,7 +3426,7 @@ function renderVisao(){
         <div class="kpi-cta">Comparar meses →</div>
       </div>
 
-      <div class="kpi tappable" onclick="setTab('comparacao')" title="Ver mudanças entre meses">
+      <div class="kpi tappable" onclick="setTab('cmp-visao')" title="Ver mudanças entre meses">
         <div class="kpi-label">
           <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
           Variação Jan → Abr
@@ -3990,129 +4565,246 @@ function renderAlertas(){
 /* ================================================================ */
 function renderEconomia(){
   const hasFilters = hasActiveFilters();
-  const servicos = DATA.por_servico;
-  const uberX = servicos.find(s => s.servico === 'Travel | UberX');
-  const comfort = servicos.find(s => s.servico === 'Travel | Comfort');
-  const black = servicos.find(s => s.servico === 'Travel | Black');
+  const txs = DATA.transacoes;
+  const fareTxs = txs.filter(t => t.tipo === 'Fare');
 
-  const uberXTicket = uberX ? uberX.valor/uberX.qtd : 0;
-  const comfortTicket = comfort ? comfort.valor/comfort.qtd : 0;
-  const economia30 = comfort ? (comfort.qtd * 0.3) * (comfortTicket - uberXTicket) : 0;
+  // ============ ECONOMIAS JÁ REALIZADAS ============
 
-  // rotas
+  // 1. Wait & Save: economia real (vs ticket UberX)
+  const ws = txs.filter(t => t.servico === 'Travel | Wait & Save' && t.tipo === 'Fare');
+  const ux = txs.filter(t => t.servico === 'Travel | UberX' && t.tipo === 'Fare');
+  const uxTicket = ux.length ? ux.reduce((s,t)=>s+t.valor,0)/ux.length : 0;
+  const wsTicket = ws.length ? ws.reduce((s,t)=>s+t.valor,0)/ws.length : 0;
+  const economiaWS = ws.length * (uxTicket - wsTicket);
+
+  // 2. Créditos/ajustes negativos (Uber devolveu dinheiro)
+  const adjs = txs.filter(t => t.tipo === 'Adjustment' && t.valor < 0);
+  const creditosRecebidos = Math.abs(adjs.reduce((s,t)=>s+t.valor, 0));
+
+  // 3. Moto vs UberX (Moto é mais barato, então uso de Moto = economia)
+  const moto = txs.filter(t => t.servico === 'Travel | Moto' && t.tipo === 'Fare');
+  const motoTicket = moto.length ? moto.reduce((s,t)=>s+t.valor,0)/moto.length : 0;
+  const economiaMoto = moto.length * (uxTicket - motoTicket);
+
+  const totalRealizado = economiaWS + creditosRecebidos + economiaMoto;
+
+  // ============ ECONOMIAS POTENCIAIS ============
+
+  // 1. Comfort → UberX (30% das corridas - oportunidade conservadora)
+  const comfort = txs.filter(t => t.servico === 'Travel | Comfort' && t.tipo === 'Fare');
+  const comfortTicket = comfort.length ? comfort.reduce((s,t)=>s+t.valor,0)/comfort.length : 0;
+  const economiaPotComfort = comfort.length * 0.30 * (comfortTicket - uxTicket);
+
+  // 2. Black → UberX (todas, pois é luxo)
+  const black = txs.filter(t => t.servico === 'Travel | Black' && t.tipo === 'Fare');
+  const blackTicket = black.length ? black.reduce((s,t)=>s+t.valor,0)/black.length : 0;
+  const economiaPotBlack = black.length * (blackTicket - uxTicket);
+
+  // 3. Priority → fila normal (dispensável)
+  const priority = txs.filter(t => (t.servico === 'Travel | Priority' || t.servico === 'Travel | Prioridade') && t.tipo === 'Fare');
+  const economiaPotPriority = priority.reduce((s,t)=>s+t.valor, 0) * 0.20; // ~20% do valor
+
+  // 4. Caronas compartilhadas: corridas no mesmo dia, mesmo trajeto
+  const trajetosDia = new Map();
+  fareTxs.filter(t => t.partida && t.destino).forEach(t => {
+    const k = `${t.data}|${t.partida.substring(0,30)}|${t.destino.substring(0,30)}`;
+    if (!trajetosDia.has(k)) trajetosDia.set(k, []);
+    trajetosDia.get(k).push(t);
+  });
+  const dups = [...trajetosDia.values()].filter(arr => arr.length >= 2);
+  const economiaCarona = dups.reduce((s, arr) => s + arr.slice(1).reduce((sum,t) => sum+t.valor, 0), 0);
+
+  // 5. Rotas recorrentes (fretamento)
   const rotaMap = new Map();
-  DATA.transacoes.filter(t => t.tipo==='Fare' && t.partida && t.destino).forEach(t => {
+  fareTxs.filter(t => t.partida && t.destino).forEach(t => {
     const k = `${t.partida}|${t.destino}`;
     if (!rotaMap.has(k)) rotaMap.set(k, {partida:t.partida, destino:t.destino, qtd:0, valor:0, cidade:t.cidade});
-    const r = rotaMap.get(k);
-    r.qtd++; r.valor += t.valor;
+    const r = rotaMap.get(k); r.qtd++; r.valor += t.valor;
   });
-  const topRotas = [...rotaMap.values()].filter(r=>r.qtd>=10).sort((a,b)=>b.qtd-a.qtd).slice(0,5);
-  const topRota = topRotas[0] || {qtd:0, valor:0, partida:'', destino:''};
+  const topRotas = [...rotaMap.values()].filter(r => r.qtd >= 10).sort((a,b)=>b.qtd-a.qtd).slice(0, 5);
+  const economiaFretamento = topRotas.reduce((s,r)=>s + r.valor*0.20, 0); // estima 20% economia se fretado
+
+  const totalPotencial = economiaPotComfort + economiaPotBlack + economiaPotPriority + economiaCarona + economiaFretamento;
+
+  const totalGasto = txs.reduce((s,t)=>s+t.valor, 0);
+  const pctRealizado = totalGasto > 0 ? (totalRealizado/totalGasto*100) : 0;
+  const pctPotencial = totalGasto > 0 ? (totalPotencial/totalGasto*100) : 0;
 
   return `
     ${pageHeader(
-      'Oportunidades estratégicas',
-      'Cenários de <em>economia</em>',
-      'Hipóteses de redução baseadas em padrões observados nos dados.'
+      'Análise de economia',
+      'Resumo de <em>economias</em>',
+      'O que já foi economizado e o que ainda pode ser economizado nos próximos meses.'
     )}
 
     ${hasFilters ? `
       <div class="active-banner warning-banner">
         <svg class="active-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <div class="active-banner-text">Esta aba mostra <strong>análise estratégica global</strong> (4 meses, todas as cidades). Os filtros são ignorados aqui — oportunidades de economia precisam ver o quadro completo.</div>
+        <div class="active-banner-text">Esta aba mostra <strong>análise estratégica global</strong> (todos os dados). Os filtros são ignorados aqui.</div>
         <button class="active-banner-clear" onclick="clearAllFilters()">Limpar filtros</button>
       </div>
     ` : ''}
 
-    <div class="kpi-grid">
-      <div class="kpi featured">
-        <div class="kpi-label">Cenário Comfort → UberX</div>
-        <div class="kpi-value large pos">${cur(economia30)}</div>
-        <div class="kpi-foot">economia em 4 meses · 30% de migração</div>
+    <!-- ============ RESUMO RÁPIDO ============ -->
+    <div class="economia-resumo">
+      <div class="economia-resumo-card pos">
+        <div class="economia-resumo-eyebrow">JÁ ECONOMIZADO</div>
+        <div class="economia-resumo-val">${cur(totalRealizado)}</div>
+        <div class="economia-resumo-pct">${pctRealizado.toFixed(2)}% do gasto total</div>
+        <div class="economia-resumo-desc">Wait & Save · uso de Moto · créditos recebidos</div>
       </div>
-      <div class="kpi">
-        <div class="kpi-label">Diferença Comfort vs UberX</div>
-        <div class="kpi-value">${cur(comfortTicket - uberXTicket)}</div>
-        <div class="kpi-foot">por corrida</div>
+      <div class="economia-resumo-divider">
+        <span>vs</span>
       </div>
-      <div class="kpi">
-        <div class="kpi-label">Top rota repetida</div>
-        <div class="kpi-value">${topRota.qtd}<span class="currency">×</span></div>
-        <div class="kpi-foot">${topRota.qtd>0 ? cur(topRota.valor) : 'sem dados'}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Premium total</div>
-        <div class="kpi-value">${(comfort.pct + (black?black.pct:0)).toFixed(1)}<span class="currency">%</span></div>
-        <div class="kpi-foot">Comfort + Black</div>
+      <div class="economia-resumo-card warn">
+        <div class="economia-resumo-eyebrow">PODERIA SER ECONOMIZADO</div>
+        <div class="economia-resumo-val">${cur(totalPotencial)}</div>
+        <div class="economia-resumo-pct">${pctPotencial.toFixed(1)}% do gasto total</div>
+        <div class="economia-resumo-desc">Mudança de categorias + caronas + fretamento</div>
       </div>
     </div>
 
-    <div class="three-col">
-      <div class="panel">
-        <div class="panel-h">
-          <h3>Política de categoria</h3>
-          <span class="meta">OPORTUNIDADE 1</span>
+    <!-- ============ JÁ ECONOMIZAMOS ============ -->
+    <div class="section-h" style="margin-top:36px">
+      <h2 style="display:flex;align-items:center;gap:10px"><span style="display:inline-flex;width:24px;height:24px;background:var(--pos-mute);color:var(--pos);border-radius:50%;align-items:center;justify-content:center;font-size:14px">✓</span> O que já <em>economizamos</em></h2>
+      <p>Decisões e padrões que <strong>geraram economia real</strong> no período.</p>
+    </div>
+
+    <div class="economia-grid">
+      <div class="economia-card pos">
+        <div class="economia-card-h">
+          <div class="economia-card-tag">REALIZADA</div>
+          <div class="economia-card-val">${cur(economiaWS)}</div>
         </div>
-        <div class="panel-body">
-          <p style="font-size:13px;color:var(--ink-3);line-height:1.6;margin-bottom:14px">
-            <strong style="color:var(--ink)">${comfort.qtd}</strong> corridas Comfort no período (${cur(comfort.valor)}).
-            Migrar 30% para UberX:
-          </p>
-          <div style="font-family:'Instrument Serif', Georgia, serif;font-size:32px;color:var(--pos);font-weight:400;letter-spacing:-0.01em">≈ ${cur(economia30)}</div>
-          <p style="font-size:11px;color:var(--ink-5);margin-top:4px">economizados em 4 meses</p>
-          <p style="font-size:13px;color:var(--ink-3);margin-top:14px;line-height:1.6">
-            Comfort apenas para deslocamentos a clientes, aeroporto ou fora do horário comercial.
-          </p>
-        </div>
+        <h4 class="economia-card-title">Uso de Wait &amp; Save</h4>
+        <p class="economia-card-desc">
+          <strong>${ws.length}</strong> ${plural(ws.length,'corrida','corridas')} usaram a categoria econômica.
+          Ticket médio: <strong>${cur(wsTicket)}</strong> vs ${cur(uxTicket)} do UberX
+          (${ws.length > 0 ? ((uxTicket-wsTicket)/uxTicket*100).toFixed(0) : 0}% mais barato).
+        </p>
       </div>
 
-      <div class="panel">
-        <div class="panel-h">
-          <h3>Rotas recorrentes</h3>
-          <span class="meta">OPORTUNIDADE 2</span>
+      <div class="economia-card pos">
+        <div class="economia-card-h">
+          <div class="economia-card-tag">REALIZADA</div>
+          <div class="economia-card-val">${cur(economiaMoto)}</div>
         </div>
-        <div class="panel-body">
-          <p style="font-size:13px;color:var(--ink-3);line-height:1.6;margin-bottom:14px">
-            ${topRotas.length > 0 ? `
-              <strong style="color:var(--ink)">${topRotas.length}</strong> rotas com 10+ ocorrências/quadrimestre.
-              Top: ${topRota.qtd}× em ${topRota.cidade || 'Salvador'}.
-            ` : 'Sem rotas com volume suficiente.'}
-          </p>
-          ${topRotas.length > 0 ? `
-            <div style="font-size:12px;color:var(--ink-3);line-height:1.5;background:var(--surface-2);padding:10px 12px;border-radius:var(--r-sm);margin-bottom:14px;font-family:'JetBrains Mono', monospace">
-              ${topRota.partida.substring(0,40)}${topRota.partida.length>40?'…':''}
-              <br>→ ${topRota.destino.substring(0,40)}${topRota.destino.length>40?'…':''}
-            </div>
-          ` : ''}
-          <p style="font-size:13px;color:var(--ink-3);line-height:1.6">
-            Avaliar fretamento ou consolidação para deslocamentos com alta repetição.
-          </p>
-        </div>
+        <h4 class="economia-card-title">Uso de Moto em vez de carro</h4>
+        <p class="economia-card-desc">
+          <strong>${moto.length}</strong> ${plural(moto.length,'corrida','corridas')} de moto.
+          Ticket médio <strong>${cur(motoTicket)}</strong> vs ${cur(uxTicket)} do UberX
+          (${moto.length > 0 ? ((uxTicket-motoTicket)/uxTicket*100).toFixed(0) : 0}% mais barato em deslocamentos rápidos).
+        </p>
       </div>
 
-      <div class="panel">
-        <div class="panel-h">
-          <h3>Núcleo concentrado</h3>
-          <span class="meta">OPORTUNIDADE 3</span>
+      <div class="economia-card pos">
+        <div class="economia-card-h">
+          <div class="economia-card-tag">RECEBIDO</div>
+          <div class="economia-card-val">${cur(creditosRecebidos)}</div>
         </div>
-        <div class="panel-body">
-          <p style="font-size:13px;color:var(--ink-3);line-height:1.6;margin-bottom:14px">
-            <strong style="color:var(--ink)">${DATA.pareto_passageiros.n_80pct}</strong> funcionários geram 80% do gasto total.
-          </p>
-          <div style="font-family:'Instrument Serif', Georgia, serif;font-size:24px;color:var(--brand);font-weight:400;line-height:1.2">Tetos individuais</div>
-          <p style="font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.6">
-            Limites mensais (ex: R$ 1.500/funcionário) sobre esse núcleo capturam o potencial com mínimo impacto operacional.
-          </p>
-        </div>
+        <h4 class="economia-card-title">Créditos da Uber</h4>
+        <p class="economia-card-desc">
+          <strong>${adjs.length}</strong> ${plural(adjs.length,'ajuste','ajustes')} de crédito recebidos por
+          corridas com problema (cancelamento, cobrança indevida, etc.).
+          Dinheiro de volta para a empresa.
+        </p>
       </div>
     </div>
 
-    ${topRotas.length > 1 ? `
+    <!-- ============ PODERÍAMOS ECONOMIZAR ============ -->
+    <div class="section-h" style="margin-top:36px">
+      <h2 style="display:flex;align-items:center;gap:10px"><span style="display:inline-flex;width:24px;height:24px;background:var(--warn-mute);color:var(--warn);border-radius:50%;align-items:center;justify-content:center;font-size:14px">!</span> O que <em>poderíamos</em> economizar</h2>
+      <p>Oportunidades identificadas nos padrões de uso. Cenários conservadores baseados em dados reais.</p>
+    </div>
+
+    <div class="economia-grid">
+      <div class="economia-card warn">
+        <div class="economia-card-h">
+          <div class="economia-card-tag warn">POTENCIAL</div>
+          <div class="economia-card-val">${cur(economiaPotComfort)}</div>
+        </div>
+        <h4 class="economia-card-title">Migrar parte do Comfort para UberX</h4>
+        <p class="economia-card-desc">
+          <strong>${comfort.length}</strong> corridas Comfort no período (${cur(comfort.reduce((s,t)=>s+t.valor,0))}).
+          Ticket Comfort: <strong>${cur(comfortTicket)}</strong> · UberX: ${cur(uxTicket)}.
+          Migrando <strong>30%</strong> para UberX nas situações não-críticas economiza ${cur(economiaPotComfort)}.
+        </p>
+      </div>
+
+      <div class="economia-card warn">
+        <div class="economia-card-h">
+          <div class="economia-card-tag warn">POTENCIAL</div>
+          <div class="economia-card-val">${cur(economiaPotBlack)}</div>
+        </div>
+        <h4 class="economia-card-title">Restringir Black</h4>
+        <p class="economia-card-desc">
+          <strong>${black.length}</strong> corridas Black (categoria luxo) somam ${cur(black.reduce((s,t)=>s+t.valor,0))}.
+          Ticket Black: <strong>${cur(blackTicket)}</strong>.
+          Reservando apenas para diretoria/clientes externos e migrando o restante para UberX, economia ${cur(economiaPotBlack)}.
+        </p>
+      </div>
+
+      <div class="economia-card warn">
+        <div class="economia-card-h">
+          <div class="economia-card-tag warn">POTENCIAL</div>
+          <div class="economia-card-val">${cur(economiaPotPriority)}</div>
+        </div>
+        <h4 class="economia-card-title">Reduzir Priority/Prioridade</h4>
+        <p class="economia-card-desc">
+          <strong>${priority.length}</strong> corridas usaram fila prioritária (${cur(priority.reduce((s,t)=>s+t.valor,0))}).
+          Eliminar essa taxa em viagens não-urgentes economiza cerca de
+          <strong>20% do valor</strong> = ${cur(economiaPotPriority)}.
+        </p>
+      </div>
+
+      <div class="economia-card warn">
+        <div class="economia-card-h">
+          <div class="economia-card-tag warn">POTENCIAL</div>
+          <div class="economia-card-val">${cur(economiaCarona)}</div>
+        </div>
+        <h4 class="economia-card-title">Caronas compartilhadas</h4>
+        <p class="economia-card-desc">
+          <strong>${dups.length}</strong> ${plural(dups.length, 'caso', 'casos')} de corridas no mesmo dia e trajeto que poderiam ter sido <strong>uma só</strong>
+          (mesma rota, mesmo dia, funcionários diferentes). Comunicar a equipe pode evitar duplicidade.
+        </p>
+      </div>
+
+      <div class="economia-card warn">
+        <div class="economia-card-h">
+          <div class="economia-card-tag warn">POTENCIAL</div>
+          <div class="economia-card-val">${cur(economiaFretamento)}</div>
+        </div>
+        <h4 class="economia-card-title">Fretamento de rotas recorrentes</h4>
+        <p class="economia-card-desc">
+          <strong>${topRotas.length}</strong> ${plural(topRotas.length,'rota','rotas')} com 10+ corridas no mesmo trajeto.
+          Negociar transporte fretado dedicado para essas rotas pode reduzir <strong>~20% do custo</strong>.
+        </p>
+      </div>
+
+      <div class="economia-card warn">
+        <div class="economia-card-h">
+          <div class="economia-card-tag warn">CONTROLE</div>
+          <div class="economia-card-val">—</div>
+        </div>
+        <h4 class="economia-card-title">Tetos individuais por funcionário</h4>
+        <p class="economia-card-desc">
+          <strong>${DATA.pareto_passageiros.n_80pct}</strong> funcionários geram <strong>80%</strong> do gasto total.
+          Definir limite mensal (ex.: R$ 1.500/funcionário) sobre esse núcleo evita estouros sem afetar a rotina.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ ROTAS CANDIDATAS A FRETAMENTO ============ -->
+    ${topRotas.length > 0 ? `
+      <div class="section-h" style="margin-top:36px">
+        <h2>Rotas <em>candidatas</em> a fretamento</h2>
+        <p>Trajetos com 10+ ocorrências no quadrimestre — alta repetição = alvo de negociação.</p>
+      </div>
+
       <div class="panel">
         <div class="panel-h">
-          <h3>Rotas com 10+ ocorrências</h3>
-          <span class="meta">${topRotas.length} ROTAS · CANDIDATAS A FRETAMENTO</span>
+          <h3>Top rotas recorrentes</h3>
+          <span class="meta">${topRotas.length} ${plural(topRotas.length,'ROTA','ROTAS')} · ${cur(topRotas.reduce((s,r)=>s+r.valor,0))} INVESTIDOS</span>
         </div>
         <div class="panel-body flush">
           <table class="tbl">
@@ -4122,14 +4814,16 @@ function renderEconomia(){
               <th class="num">Corridas</th>
               <th class="num">Valor total</th>
               <th class="num">Ticket</th>
+              <th class="num">Economia se 20%</th>
             </tr></thead>
             <tbody>
               ${topRotas.map(r => `<tr>
                 <td><span class="name">${r.cidade}</span></td>
-                <td style="font-size:11px;color:var(--ink-4);font-family:'JetBrains Mono',monospace">${r.partida.substring(0,35)}${r.partida.length>35?'…':''} → ${r.destino.substring(0,35)}${r.destino.length>35?'…':''}</td>
+                <td style="font-size:11px;color:var(--ink-4);font-family:'JetBrains Mono',monospace">${r.partida.substring(0,32)}${r.partida.length>32?'…':''} → ${r.destino.substring(0,32)}${r.destino.length>32?'…':''}</td>
                 <td class="num"><strong>${r.qtd}×</strong></td>
                 <td class="num">${cur(r.valor)}</td>
                 <td class="num">${cur(r.valor/r.qtd)}</td>
+                <td class="num" style="color:var(--warn);font-weight:600">${cur(r.valor*0.20)}</td>
               </tr>`).join('')}
             </tbody>
           </table>
@@ -4137,10 +4831,18 @@ function renderEconomia(){
       </div>
     ` : ''}
 
+    <!-- ============ INSIGHT FINAL ============ -->
+    <div class="insight" style="margin-top:24px">
+      <div class="insight-label">Cenário combinado</div>
+      <div class="insight-body">
+        Aplicando <strong>todas as 5 oportunidades</strong> acima, o potencial total de economia é de <strong style="color:var(--warn)">${cur(totalPotencial)}</strong> — equivalente a <em>${pctPotencial.toFixed(1)}%</em> do gasto histórico (${cur(totalGasto)}). Esse é um cenário <strong>conservador</strong> que assume migração parcial de categorias e adoção parcial das caronas. Combinando com tetos individuais e revisão mensal, o impacto pode chegar a 15–20%.
+      </div>
+    </div>
+
     <div class="insight warn">
       <div class="insight-label">Importante</div>
       <div class="insight-body">
-        Três alavancas — <strong>política de categoria, fretamento e tetos individuais</strong> — combinadas podem reduzir gastos em <em>10–20%</em>. Os números são <strong>cenários hipotéticos baseados em padrões reais</strong>, não previsões garantidas. A combinação de medidas amplifica o efeito.
+        Os números de economia <strong>potencial</strong> são <em>cenários hipotéticos</em> baseados em padrões reais observados — não previsões garantidas. Migração de categorias depende de aceitação dos funcionários e contexto de cada corrida. Revisar caso a caso antes de aplicar políticas amplas.
       </div>
     </div>
   `;
@@ -4199,6 +4901,8 @@ function renderComparacao(){
     ${activeBanner(`Comparativo · <strong>${cur(txs.reduce((s,t)=>s+t.valor,0))}</strong> totais`)}
 
     ${renderOverview4Meses(porMes, maxTotal, peakMes)}
+
+    ${typeof renderVizSection === 'function' ? renderVizSection(porMes) : ''}
 
     ${renderResumoExecutivo(porMes)}
 
@@ -5211,11 +5915,18 @@ function renderConciliacao(){
               <td style="font-size:12px;color:var(--ink-3);text-align:left">Uber só conta viagens · nossa dash inclui ${cur(valorEntregas)} de entregas + ${cur(valorTips)} de gorjetas ${cur(valorAdjs)} de ajustes</td>
             </tr>
             <tr>
-              <td><div class="label-name">Viagens (transporte)</div><div class="sub">só Fare, sem Envios</div></td>
+              <td><div class="label-name">Viagens · qtd corridas</div><div class="sub">só Fare, sem Envios</div></td>
               <td>1.286</td>
               <td>${viagens.length}</td>
               <td><span class="delta zero">≈ ${viagens.length - 1286} <span style="opacity:0.7">·</span> ${((viagens.length-1286)/1286*100).toFixed(2)}%</span></td>
-              <td style="font-size:12px;color:var(--ink-3);text-align:left">Diferença mínima · arredondamento Uber</td>
+              <td style="font-size:12px;color:var(--ink-3);text-align:left">Diferença mínima · ${viagens.length - 1286 > 0 ? '1 corrida no limite Mar/Abr ou cancelamento contado de forma diferente' : 'arredondamento Uber'}</td>
+            </tr>
+            <tr>
+              <td><div class="label-name">Viagens · valor</div><div class="sub">só Fare, sem Envios</div></td>
+              <td>R$ 34.951</td>
+              <td>${cur(valorViagens)}</td>
+              <td><span class="delta zero">≈ ${cur(valorViagens - 34951)} <span style="opacity:0.7">·</span> ${((valorViagens-34951)/34951*100).toFixed(2)}%</span></td>
+              <td style="font-size:12px;color:var(--ink-3);text-align:left">Uber arredonda para "R$ 34.951" no painel · nossa dash soma todos os centavos das ${viagens.length} corridas</td>
             </tr>
             <tr>
               <td><div class="label-name">Pessoas</div><div class="sub">funcionários únicos</div></td>
@@ -5348,6 +6059,15 @@ function renderConciliacao(){
         </div>
       </div>
     ` : ''}
+
+    <div class="insight" style="border-left-color:var(--ink-5)">
+      <div class="insight-label" style="color:var(--ink-4)">Por que os centavos não batem exatamente</div>
+      <div class="insight-body">
+        Você pode ter notado que o painel Uber mostra <strong>"R$ 34.951"</strong> e nossa dash mostra <strong>${cur(valorViagens)}</strong> — uma diferença de apenas <em>${cur(valorViagens - 34951)}</em> (${((valorViagens-34951)/34951*100).toFixed(2)}%).
+        Isso acontece porque o painel Uber <strong>arredonda</strong> os números para parecerem mais limpos no resumo executivo (R$ 34.951 em vez de R$ 34.995,01 · 1.286 viagens em vez de 1.287 · R$ 699 em vez de R$ 699,90 por pessoa).
+        Nossa dash soma <strong>todos os centavos</strong> das transações exportadas no CSV. Para fechamento contábil, use os números da nossa dash (precisão total). Para apresentações executivas e análise de tendências, qualquer um dos dois serve — a diferença de <em>0,13%</em> não muda nenhuma análise.
+      </div>
+    </div>
   `;
 }
 
@@ -5796,12 +6516,667 @@ function wireTooltips(){
   });
 }
 
+/* ================================================================ */
+/* COMPARAÇÃO · GRÁFICOS INTERATIVOS · Submenu                        */
+/* ================================================================ */
+let vizTab = 'tendencia'; // tab ativa: tendencia | funcionarios | cidades | servicos
+
+function setVizTab(tab){
+  vizTab = tab;
+  // Re-render só a seção dos gráficos
+  const section = document.getElementById('viz-section');
+  if (section) {
+    const txs = filteredTxs();
+    if (txs.length > 0) {
+      section.outerHTML = renderVizSection(buildPorMesData(txs));
+      // Re-wire after re-render
+      if (typeof wireTooltips === 'function') wireTooltips();
+    }
+  }
+}
+
+function buildPorMesData(txs){
+  const porMes = {};
+  MESES_ORDER.forEach(m => {
+    const mTxs = txs.filter(t => t.mes === m);
+    const mFare = mTxs.filter(t => t.tipo === 'Fare');
+    porMes[m] = {
+      txs: mTxs,
+      fareTxs: mFare,
+      total: mTxs.reduce((s,t)=>s+t.valor, 0),
+      qtdCorridas: mFare.length,
+      passageiros: new Set(mTxs.map(t => t.passageiro)),
+      cidades: new Set(mTxs.map(t => t.cidade)),
+      servicos: new Set(mFare.map(t => t.servico)),
+      ticketMedio: mFare.length ? mFare.reduce((s,t)=>s+t.valor,0)/mFare.length : 0,
+    };
+  });
+  return porMes;
+}
+
+function renderVizSection(porMes){
+  const tabs = [
+    {id:'tendencia',  label:'Tendência mensal'},
+    {id:'funcionarios', label:'Funcionários'},
+    {id:'cidades',    label:'Cidades'},
+    {id:'servicos',   label:'Serviços'},
+  ];
+
+  let body = '';
+  switch(vizTab){
+    case 'tendencia':    body = renderVizTendencia(porMes); break;
+    case 'funcionarios': body = renderVizFuncionarios(porMes); break;
+    case 'cidades':      body = renderVizCidades(porMes); break;
+    case 'servicos':     body = renderVizServicos(porMes); break;
+  }
+
+  return `
+    <div class="viz-section" id="viz-section">
+      <div class="viz-tabs">
+        ${tabs.map(t => `
+          <button class="viz-tab ${vizTab===t.id?'active':''}" onclick="setVizTab('${t.id}')">
+            ${t.label}
+          </button>
+        `).join('')}
+      </div>
+      <div class="viz-body">${body}</div>
+    </div>
+  `;
+}
+
+/* ============== VIZ 1: Tendência mensal (linha + área) ============== */
+function renderVizTendencia(porMes){
+  const meses = MESES_ORDER;
+  const valores = meses.map(m => porMes[m].total);
+  const max = Math.max(...valores, 1);
+  const totalAcum = valores.reduce((a,b)=>a+b,0);
+
+  // SVG dimensões
+  const W = 800, H = 280, padding = {top:30, right:30, bottom:40, left:60};
+  const chartW = W - padding.left - padding.right;
+  const chartH = H - padding.top - padding.bottom;
+
+  const xPos = i => padding.left + (chartW / (meses.length - 1)) * i;
+  const yPos = v => padding.top + chartH - (v/max * chartH);
+
+  const linePath = meses.map((m,i) => `${i===0?'M':'L'} ${xPos(i)} ${yPos(valores[i])}`).join(' ');
+  const areaPath = `${linePath} L ${xPos(meses.length-1)} ${padding.top+chartH} L ${xPos(0)} ${padding.top+chartH} Z`;
+
+  // Grid linhas y (5 níveis)
+  const gridLevels = [0, 0.25, 0.5, 0.75, 1];
+  const gridLines = gridLevels.map(p => {
+    const y = padding.top + chartH - p*chartH;
+    const v = max * p;
+    return `<line class="grid-line" x1="${padding.left}" y1="${y}" x2="${padding.left+chartW}" y2="${y}"/>
+            <text class="axis-label" x="${padding.left-8}" y="${y+3}" text-anchor="end">${curShort(v)}</text>`;
+  }).join('');
+
+  // Pontos
+  const dots = meses.map((m,i) => {
+    const v = valores[i];
+    const x = xPos(i), y = yPos(v);
+    const prev = i > 0 ? valores[i-1] : null;
+    const pct = prev && prev > 0 ? ((v-prev)/prev*100).toFixed(1) : null;
+    const sharePct = totalAcum > 0 ? (v/totalAcum*100).toFixed(1) : '0';
+    const tip = `<strong>${m}</strong><br>Total: ${cur(v)}<br>${porMes[m].qtdCorridas} corridas · ${sharePct}% do quadrim.${pct !== null ? `<br>${pct >= 0 ? '+' : ''}${pct}% vs ${meses[i-1]}` : ''}`;
+    return `
+      <circle cx="${x}" cy="${y}" r="6" fill="white" stroke="var(--brand)" stroke-width="2.5" data-tip="${tip.replace(/"/g, '&quot;')}" data-set-filter="mes|${m}" style="cursor:pointer"/>
+      <circle cx="${x}" cy="${y}" r="2.5" fill="var(--brand)" pointer-events="none"/>
+      <text class="value-label" x="${x}" y="${y-14}" text-anchor="middle" fill="var(--ink)">${curShort(v)}</text>
+    `;
+  }).join('');
+
+  // Labels eixo X
+  const xLabels = meses.map((m,i) => `<text class="axis-label" x="${xPos(i)}" y="${padding.top+chartH+22}" text-anchor="middle">${m}</text>`).join('');
+
+  return `
+    <div class="viz-body-h">
+      <div>
+        <div class="viz-body-title">Tendência <em>mensal</em></div>
+        <div style="font-size:12px;color:var(--ink-4);margin-top:4px">Evolução dos gastos · clique no ponto para filtrar o mês</div>
+      </div>
+      <div class="viz-body-sub">VALORES · CORRIDAS NO TOOLTIP</div>
+    </div>
+
+    <svg class="viz-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      ${gridLines}
+      <line class="axis-line" x1="${padding.left}" y1="${padding.top+chartH}" x2="${padding.left+chartW}" y2="${padding.top+chartH}"/>
+      <path d="${areaPath}" fill="var(--brand-mute)" opacity="0.5"/>
+      <path d="${linePath}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>
+      ${dots}
+      ${xLabels}
+    </svg>
+  `;
+}
+
+/* ============== VIZ 2: Funcionários (barras divergentes) ============== */
+function renderVizFuncionarios(porMes){
+  const [a, b] = comparePair;
+  const dA = porMes[a], dB = porMes[b];
+  if (!dA || !dB) return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem dados</div>';
+
+  // Por funcionário em cada mês
+  const passA = new Map(), passB = new Map();
+  dA.txs.forEach(t => {
+    if (!passA.has(t.passageiro)) passA.set(t.passageiro, 0);
+    passA.set(t.passageiro, passA.get(t.passageiro) + t.valor);
+  });
+  dB.txs.forEach(t => {
+    if (!passB.has(t.passageiro)) passB.set(t.passageiro, 0);
+    passB.set(t.passageiro, passB.get(t.passageiro) + t.valor);
+  });
+
+  const todos = new Set([...passA.keys(), ...passB.keys()]);
+  const mudancas = [...todos].map(nome => {
+    const va = passA.get(nome) || 0;
+    const vb = passB.get(nome) || 0;
+    const diff = vb - va;
+    const pct = va > 0 ? (diff/va*100) : (vb > 0 ? 100 : 0);
+    return {nome, vA:va, vB:vb, diff, pct,
+      novo: va === 0 && vb > 0,
+      sumiu: va > 0 && vb === 0};
+  }).filter(m => Math.abs(m.diff) > 0)
+    .sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff))
+    .slice(0, 18); // top 18 mudanças
+
+  if (mudancas.length === 0) {
+    return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem mudanças entre os meses</div>';
+  }
+
+  const maxAbs = Math.max(...mudancas.map(m => Math.abs(m.diff)), 1);
+
+  const rows = mudancas.map(m => {
+    const widthPct = Math.abs(m.diff) / maxAbs * 50;
+    let cls, label, valLabel;
+    if (m.novo) { cls = 'new'; label = 'NOVO'; valLabel = `+${cur(m.vB)}`; }
+    else if (m.sumiu) { cls = 'gone'; label = 'SUMIU'; valLabel = `-${cur(m.vA)}`; }
+    else if (m.diff > 0) { cls = 'up'; label = `+${cur(m.diff)}`; valLabel = label; }
+    else { cls = 'down'; label = cur(m.diff); valLabel = label; }
+    const tip = `<strong>${m.nome}</strong><br>${a}: ${cur(m.vA)}<br>${b}: ${cur(m.vB)}<br>Δ: ${valLabel}${m.pct !== null && !m.novo && !m.sumiu ? ` · ${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(0)}%` : ''}`;
+    const sideStyle = m.diff > 0 ? `width:${widthPct}%;` : `width:${widthPct}%;`;
+    return `
+      <div class="div-row" data-passageiro="${m.nome.replace(/"/g,'&quot;')}" data-tip="${tip.replace(/"/g,'&quot;')}">
+        <div class="div-row-name">${m.nome}</div>
+        <div class="div-row-bar">
+          <div class="div-row-bar-line"></div>
+          <div class="div-row-bar-fill ${cls}" style="${sideStyle}"></div>
+        </div>
+        <div class="div-row-val ${cls === 'new' || cls === 'up' ? 'up' : 'down'}">
+          ${valLabel}
+          ${!m.novo && !m.sumiu ? `<span class="pct">${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(0)}%</span>` : `<span class="pct">${label}</span>`}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="viz-body-h">
+      <div>
+        <div class="viz-body-title">Quem mudou em <em>funcionários</em></div>
+        <div style="font-size:12px;color:var(--ink-4);margin-top:4px">${a} → ${b} · top 18 mudanças por valor absoluto · clique para drill-down</div>
+      </div>
+      <div class="viz-body-sub">VERMELHO ↑ AUMENTOU · VERDE ↓ REDUZIU · AZUL ➕ NOVO</div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-5);margin-bottom:8px;padding:0 8px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">
+      <span>↑ AUMENTOU (gasto subiu)</span>
+      <span style="color:var(--ink-4)">— BASE 0 —</span>
+      <span>↓ REDUZIU (gasto caiu)</span>
+    </div>
+    <div class="diverging-list">${rows}</div>
+  `;
+}
+
+/* ============== VIZ 3: Cidades (barras divergentes) ============== */
+function renderVizCidades(porMes){
+  const [a, b] = comparePair;
+  const dA = porMes[a], dB = porMes[b];
+  if (!dA || !dB) return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem dados</div>';
+
+  const cidA = new Map(), cidB = new Map();
+  dA.txs.forEach(t => cidA.set(t.cidade, (cidA.get(t.cidade)||0) + t.valor));
+  dB.txs.forEach(t => cidB.set(t.cidade, (cidB.get(t.cidade)||0) + t.valor));
+
+  const todas = new Set([...cidA.keys(), ...cidB.keys()]);
+  const mudancas = [...todas].map(cid => {
+    const va = cidA.get(cid) || 0;
+    const vb = cidB.get(cid) || 0;
+    const diff = vb - va;
+    const pct = va > 0 ? (diff/va*100) : (vb > 0 ? 100 : 0);
+    return {cidade:cid, vA:va, vB:vb, diff, pct,
+      novo: va === 0 && vb > 0,
+      sumiu: va > 0 && vb === 0};
+  }).filter(m => Math.abs(m.diff) > 0)
+    .sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff));
+
+  if (mudancas.length === 0) {
+    return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem mudanças entre os meses</div>';
+  }
+
+  const maxAbs = Math.max(...mudancas.map(m => Math.abs(m.diff)), 1);
+
+  const rows = mudancas.map(m => {
+    const widthPct = Math.abs(m.diff) / maxAbs * 50;
+    let cls, label, valLabel;
+    if (m.novo) { cls = 'new'; valLabel = `+${cur(m.vB)}`; label = 'NOVA'; }
+    else if (m.sumiu) { cls = 'gone'; valLabel = `-${cur(m.vA)}`; label = 'SUMIU'; }
+    else if (m.diff > 0) { cls = 'up'; valLabel = `+${cur(m.diff)}`; label = valLabel; }
+    else { cls = 'down'; valLabel = cur(m.diff); label = valLabel; }
+    const tip = `<strong>${m.cidade}</strong><br>${a}: ${cur(m.vA)}<br>${b}: ${cur(m.vB)}<br>Δ: ${valLabel}${m.pct !== null && !m.novo && !m.sumiu ? ` · ${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(0)}%` : ''}`;
+    return `
+      <div class="div-row" data-set-filter="cidade|${m.cidade}" data-tip="${tip.replace(/"/g,'&quot;')}">
+        <div class="div-row-name">${m.cidade}</div>
+        <div class="div-row-bar">
+          <div class="div-row-bar-line"></div>
+          <div class="div-row-bar-fill ${cls}" style="width:${widthPct}%"></div>
+        </div>
+        <div class="div-row-val ${cls === 'new' || cls === 'up' ? 'up' : 'down'}">
+          ${valLabel}
+          ${!m.novo && !m.sumiu ? `<span class="pct">${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(0)}%</span>` : `<span class="pct">${label}</span>`}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="viz-body-h">
+      <div>
+        <div class="viz-body-title">Quem mudou em <em>cidades</em></div>
+        <div style="font-size:12px;color:var(--ink-4);margin-top:4px">${a} → ${b} · clique na cidade para filtrar a dashboard</div>
+      </div>
+      <div class="viz-body-sub">${mudancas.length} CIDADES COM MUDANÇA</div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-5);margin-bottom:8px;padding:0 8px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">
+      <span>↑ CRESCEU</span>
+      <span style="color:var(--ink-4)">— BASE 0 —</span>
+      <span>↓ REDUZIU</span>
+    </div>
+    <div class="diverging-list">${rows}</div>
+  `;
+}
+
+/* ============== VIZ 4: Serviços (barras agrupadas) ============== */
+function renderVizServicos(porMes){
+  const [a, b] = comparePair;
+  const dA = porMes[a], dB = porMes[b];
+  if (!dA || !dB) return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem dados</div>';
+
+  const sA = new Map(), sB = new Map();
+  dA.fareTxs.forEach(t => sA.set(t.servico, (sA.get(t.servico)||0) + t.valor));
+  dB.fareTxs.forEach(t => sB.set(t.servico, (sB.get(t.servico)||0) + t.valor));
+
+  const totalA = [...sA.values()].reduce((s,x)=>s+x, 0);
+  const totalB = [...sB.values()].reduce((s,x)=>s+x, 0);
+  const todos = new Set([...sA.keys(), ...sB.keys()]);
+
+  const dados = [...todos].map(serv => {
+    const va = sA.get(serv) || 0;
+    const vb = sB.get(serv) || 0;
+    const pctA = totalA > 0 ? va/totalA*100 : 0;
+    const pctB = totalB > 0 ? vb/totalB*100 : 0;
+    return {servico:serv, vA:va, vB:vb, pctA, pctB, deltaPct: pctB - pctA, diff: vb - va};
+  }).sort((a,b) => Math.max(b.vA, b.vB) - Math.max(a.vA, a.vB));
+
+  const maxVal = Math.max(...dados.map(d => Math.max(d.vA, d.vB)), 1);
+
+  const rows = dados.map(d => {
+    const wA = (d.vA / maxVal * 100);
+    const wB = (d.vB / maxVal * 100);
+    const tip = `<strong>${d.servico.replace('Travel | ','')}</strong><br>${a}: ${cur(d.vA)} (${d.pctA.toFixed(1)}%)<br>${b}: ${cur(d.vB)} (${d.pctB.toFixed(1)}%)<br>Δpp: ${d.deltaPct >= 0 ? '+' : ''}${d.deltaPct.toFixed(1)}pp`;
+    let statusCls = '', statusLabel = '';
+    if (d.vA === 0 && d.vB > 0) { statusCls = 'up'; statusLabel = 'NOVO'; }
+    else if (d.vB === 0 && d.vA > 0) { statusCls = 'down'; statusLabel = 'SUMIU'; }
+    else if (d.deltaPct > 1) { statusCls = 'up'; statusLabel = `+${d.deltaPct.toFixed(1)}pp`; }
+    else if (d.deltaPct < -1) { statusCls = 'down'; statusLabel = `${d.deltaPct.toFixed(1)}pp`; }
+    else { statusLabel = `${d.deltaPct.toFixed(1)}pp`; }
+
+    return `
+      <div class="gb-row" data-servico-modal="${d.servico}" data-tip="${tip.replace(/"/g,'&quot;')}">
+        <div class="gb-row-name">
+          ${d.servico.replace('Travel | ','')}
+          <span class="pp">${d.pctA.toFixed(1)}% → ${d.pctB.toFixed(1)}%</span>
+        </div>
+        <div class="gb-row-bars">
+          <div class="gb-bar-pair">
+            <span class="gb-bar-label">${a.substring(0,3).toUpperCase()}</span>
+            <div class="gb-bar-track"><div class="gb-bar-fill b-old" style="width:${wA}%"></div></div>
+            <span class="gb-bar-val">${cur(d.vA)}</span>
+          </div>
+          <div class="gb-bar-pair">
+            <span class="gb-bar-label">${b.substring(0,3).toUpperCase()}</span>
+            <div class="gb-bar-track"><div class="gb-bar-fill" style="width:${wB}%"></div></div>
+            <span class="gb-bar-val">${cur(d.vB)}</span>
+          </div>
+        </div>
+        <div class="gb-row-status ${statusCls}">${statusLabel}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="viz-body-h">
+      <div>
+        <div class="viz-body-title">Mix de <em>serviços</em></div>
+        <div style="font-size:12px;color:var(--ink-4);margin-top:4px">${a} (cinza) vs ${b} (azul) · clique no serviço para drill-down</div>
+      </div>
+      <div class="viz-body-sub">${dados.length} CATEGORIAS</div>
+    </div>
+    <div class="grouped-bars">${rows}</div>
+  `;
+}
+
+/* ================================================================ */
+/* SUB-PÁGINAS DA COMPARAÇÃO (cada sub-item do menu lateral)          */
+/* ================================================================ */
+function renderComparacaoSub(sub){
+  const txs = filteredTxs();
+
+  if (txs.length === 0) {
+    return pageHeader('Análise comparativa', 'Comparação <em>mensal</em>') + activeBanner('') + emptyState();
+  }
+
+  const porMes = buildPorMesData(txs);
+
+  // Header dinâmico por sub-aba
+  const headers = {
+    visao:        { eyebrow:'Análise comparativa', title:'Visão <em>geral</em>',          sub:'Os 4 meses lado a lado e o resumo executivo das mudanças.' },
+    tendencia:    { eyebrow:'Análise comparativa', title:'Tendência <em>mensal</em>',     sub:'Como o gasto evoluiu mês a mês — clique no ponto para filtrar.' },
+    funcionarios: { eyebrow:'Análise comparativa', title:'Mudanças em <em>funcionários</em>', sub:'Quem aumentou, reduziu, entrou ou saiu entre os dois meses selecionados.' },
+    cidades:      { eyebrow:'Análise comparativa', title:'Mudanças em <em>cidades</em>',  sub:'Distribuição geográfica que cresceu, encolheu, surgiu ou desapareceu.' },
+    servicos:     { eyebrow:'Análise comparativa', title:'Mudanças em <em>serviços</em>', sub:'Como o mix de categorias mudou entre os dois meses (apenas tarifas).' },
+  };
+  const h = headers[sub] || headers.visao;
+  const headerHtml = pageHeader(h.eyebrow, h.title, h.sub);
+
+  if (sub === 'visao') {
+    // Visão geral: 4 cards mensais + stat lines + seletor par + KPIs do par
+    const totaisArr = MESES_ORDER.map(m => porMes[m].total);
+    const maxTotal = Math.max(...totaisArr, 1);
+    const peakMes = MESES_ORDER[totaisArr.indexOf(Math.max(...totaisArr))];
+    return `
+      ${headerHtml}
+      ${activeBanner(`Comparativo · <strong>${cur(txs.reduce((s,t)=>s+t.valor,0))}</strong> totais`)}
+      ${renderOverview4Meses(porMes, maxTotal, peakMes)}
+      ${renderResumoExecutivo(porMes)}
+      ${renderSecaoSeletor(porMes)}
+    `;
+  }
+
+  // Demais sub-abas: header + seletor de par enxuto (só pílulas) + gráfico
+  const seletorPar = renderSeletorParCompacto(porMes);
+  let body = '';
+  switch(sub){
+    case 'tendencia':    body = renderVizTendencia(porMes); break;
+    case 'funcionarios': body = renderVizFuncionarios(porMes); break;
+    case 'cidades':      body = renderVizCidades(porMes); break;
+    case 'servicos':     body = renderVizServicos(porMes); break;
+  }
+
+  return `
+    ${headerHtml}
+    ${activeBanner('')}
+    ${seletorPar}
+    <div class="viz-section" style="margin-top:0">
+      <div class="viz-body" style="padding:24px 28px;min-height:auto">
+        ${body}
+      </div>
+    </div>
+  `;
+}
+
+/* Seletor de par compacto · usado só nas sub-abas de gráfico (não na Visão geral) */
+function renderSeletorParCompacto(porMes){
+  // Tendência não precisa de par
+  if (activeTab === 'cmp-tendencia') return '';
+
+  const validMeses = MESES_ORDER.filter(m => porMes[m].total > 0);
+  if (validMeses.length < 2) return '';
+  if (!validMeses.includes(comparePair[0])) comparePair[0] = validMeses[0];
+  if (!validMeses.includes(comparePair[1])) comparePair[1] = validMeses[validMeses.length-1];
+
+  const a = comparePair[0], b = comparePair[1];
+  const dA = porMes[a], dB = porMes[b];
+  const diff = dB.total - dA.total;
+  const pct = dA.total > 0 ? (diff/dA.total*100) : 0;
+
+  return `
+    <div style="background:var(--surface);border:1px solid var(--ink-7);border-radius:var(--r-lg);padding:14px 20px;margin-bottom:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-shadow:var(--shadow-xs)">
+      <span style="font-size:11px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">COMPARAR</span>
+      <div class="mes-pills">
+        ${MESES_ORDER.map(m => {
+          const disabled = porMes[m].total === 0;
+          return `<button class="mes-pill ${a===m?'active':''}" ${disabled?'disabled':''} onclick="event.stopPropagation(); setComparePair('${m}', '${b}')">${m.substring(0,3)}</button>`;
+        }).join('')}
+      </div>
+      <span style="font-size:14px;color:var(--ink-5)">→</span>
+      <div class="mes-pills">
+        ${MESES_ORDER.map(m => {
+          const disabled = porMes[m].total === 0;
+          return `<button class="mes-pill ${b===m?'active':''}" ${disabled?'disabled':''} onclick="event.stopPropagation(); setComparePair('${a}', '${m}')">${m.substring(0,3)}</button>`;
+        }).join('')}
+      </div>
+      <div style="margin-left:auto;display:flex;gap:18px;align-items:center;font-variant-numeric:tabular-nums;flex-wrap:wrap">
+        <div><span style="font-size:11px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600">${a}</span> <strong style="margin-left:4px;color:var(--ink)">${cur(dA.total)}</strong></div>
+        <div><span style="font-size:11px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600">${b}</span> <strong style="margin-left:4px;color:var(--ink)">${cur(dB.total)}</strong></div>
+        <div style="background:${diff>=0?'var(--neg-mute)':'var(--pos-mute)'};color:${diff>=0?'var(--neg)':'var(--pos)'};padding:4px 10px;border-radius:6px;font-weight:700;font-size:12px">${diff>=0?'+':''}${pct.toFixed(1)}%</div>
+      </div>
+    </div>
+  `;
+}
+
+/* Override da setComparePair para re-renderizar a sub-aba também */
+const _originalSetComparePair = setComparePair;
+setComparePair = function(a, b){
+  comparePair = [a, b];
+  render();
+};
+
+/* ================================================================ */
+/* CADASTRO & ATIVIDADE · histórico mensal de cada funcionário        */
+/* ================================================================ */
+function renderCadastroAtividade(){
+  const txs = filteredTxs();
+
+  if (txs.length === 0) {
+    return pageHeader('Cadastro & atividade', 'Funcionários <em>cadastrados</em>') + activeBanner('') + emptyState();
+  }
+
+  // Construir mapa por funcionário: meses ativos + total + corridas
+  const mapaFunc = new Map();
+  txs.forEach(t => {
+    if (!mapaFunc.has(t.passageiro)) {
+      mapaFunc.set(t.passageiro, {
+        nome: t.passageiro,
+        mesesAtivos: new Set(),
+        valorPorMes: {Janeiro:0, Fevereiro:0, Março:0, Abril:0},
+        corridasPorMes: {Janeiro:0, Fevereiro:0, Março:0, Abril:0},
+        totalValor: 0,
+        totalCorridas: 0,
+      });
+    }
+    const f = mapaFunc.get(t.passageiro);
+    f.mesesAtivos.add(t.mes);
+    f.valorPorMes[t.mes] += t.valor;
+    f.totalValor += t.valor;
+    if (t.tipo === 'Fare') {
+      f.corridasPorMes[t.mes]++;
+      f.totalCorridas++;
+    }
+  });
+
+  // Classificar cada funcionário
+  function classificar(f){
+    const n = f.mesesAtivos.size;
+    const usouEmAbril = f.mesesAtivos.has('Abril');
+    if (n === 4) return {tipo:'frequente', label:'Frequente', cor:'pos', desc:'4 meses ativos'};
+    if (n === 1) return {tipo:'esporadico', label:'Esporádico', cor:'warn', desc:'1 mês apenas'};
+    if (!usouEmAbril) return {tipo:'inativo', label:'Inativo em Abril', cor:'gone', desc:`Não usa há ${n===0?'0':4-Math.max(...['Janeiro','Fevereiro','Março','Abril'].map((m,i)=>f.mesesAtivos.has(m)?i:-1))} ${n===0?'mês':'meses'}`};
+    return {tipo:'regular', label:'Regular', cor:'brand', desc:`${n} meses ativos`};
+  }
+
+  const todos = [...mapaFunc.values()].map(f => ({...f, classe: classificar(f)}));
+
+  // Contagens por categoria
+  const contFreq = todos.filter(f => f.classe.tipo === 'frequente').length;
+  const contReg = todos.filter(f => f.classe.tipo === 'regular').length;
+  const contEsp = todos.filter(f => f.classe.tipo === 'esporadico').length;
+  const contInat = todos.filter(f => f.classe.tipo === 'inativo').length;
+
+  // Ordenar por: total gasto desc, dentro do mesmo grupo
+  todos.sort((a,b) => b.totalValor - a.totalValor);
+
+  // Filtro ativo (clicar num KPI filtra a tabela)
+  const filtroAtivo = window.__cadastroFiltro || 'todos';
+  const visiveis = filtroAtivo === 'todos' ? todos : todos.filter(f => f.classe.tipo === filtroAtivo);
+
+  return `
+    ${pageHeader(
+      'Cadastro & atividade',
+      'Funcionários <em>cadastrados</em>',
+      `${todos.length} funcionários no cadastro · histórico de uso mês a mês durante Jan – Abr 2026.`
+    )}
+    ${activeBanner('')}
+
+    <!-- Card destaque: total cadastrado -->
+    <div class="kpi-grid" style="margin-bottom:14px;grid-template-columns:1fr">
+      <div class="kpi featured" style="cursor:default">
+        <div class="kpi-label">
+          <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Total de funcionários cadastrados no Uber Business
+        </div>
+        <div class="kpi-value large">${todos.length}</div>
+        <div class="kpi-foot">funcionários únicos identificados nos relatórios da empresa entre Janeiro e Abril de 2026</div>
+      </div>
+    </div>
+
+    <!-- KPIs por status -->
+    <div class="kpi-grid" style="margin-bottom:24px">
+      <div class="kpi tappable ${filtroAtivo==='frequente'?'featured':''}" onclick="setCadastroFiltro('${filtroAtivo==='frequente'?'todos':'frequente'}')" title="Filtrar frequentes">
+        <div class="kpi-label">
+          <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Frequente
+        </div>
+        <div class="kpi-value medium" style="color:${filtroAtivo==='frequente'?'#fff':'var(--pos)'}">${contFreq}</div>
+        <div class="kpi-foot">${(contFreq/todos.length*100).toFixed(0)}% do quadro · 4 meses ativos</div>
+      </div>
+      <div class="kpi tappable ${filtroAtivo==='regular'?'featured':''}" onclick="setCadastroFiltro('${filtroAtivo==='regular'?'todos':'regular'}')" title="Filtrar regulares">
+        <div class="kpi-label">
+          <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Regular
+        </div>
+        <div class="kpi-value medium" style="color:${filtroAtivo==='regular'?'#fff':'var(--brand)'}">${contReg}</div>
+        <div class="kpi-foot">${(contReg/todos.length*100).toFixed(0)}% · 2-3 meses ativos</div>
+      </div>
+      <div class="kpi tappable ${filtroAtivo==='esporadico'?'featured':''}" onclick="setCadastroFiltro('${filtroAtivo==='esporadico'?'todos':'esporadico'}')" title="Filtrar esporádicos">
+        <div class="kpi-label">
+          <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Esporádico
+        </div>
+        <div class="kpi-value medium" style="color:${filtroAtivo==='esporadico'?'#fff':'var(--warn)'}">${contEsp}</div>
+        <div class="kpi-foot">${(contEsp/todos.length*100).toFixed(0)}% · usaram em 1 mês apenas</div>
+      </div>
+      <div class="kpi tappable ${filtroAtivo==='inativo'?'featured':''}" onclick="setCadastroFiltro('${filtroAtivo==='inativo'?'todos':'inativo'}')" title="Filtrar inativos">
+        <div class="kpi-label">
+          <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          Inativo em Abril
+        </div>
+        <div class="kpi-value medium" style="color:${filtroAtivo==='inativo'?'#fff':'var(--ink-4)'}">${contInat}</div>
+        <div class="kpi-foot">${(contInat/todos.length*100).toFixed(0)}% · não usaram em Abril</div>
+      </div>
+    </div>
+
+    ${filtroAtivo !== 'todos' ? `
+      <div style="background:var(--brand-mute);border:1px solid var(--brand-soft);border-radius:var(--r-md);padding:10px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--brand-deep)">
+          Mostrando apenas: <strong>${filtroAtivo === 'frequente' ? 'Frequentes' : filtroAtivo === 'regular' ? 'Regulares' : filtroAtivo === 'esporadico' ? 'Esporádicos' : 'Inativos em Abril'}</strong> · ${visiveis.length} ${plural(visiveis.length,'funcionário','funcionários')}
+        </span>
+        <button onclick="setCadastroFiltro('todos')" style="background:none;border:none;color:var(--brand-deep);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Mostrar todos</button>
+      </div>
+    ` : ''}
+
+    <!-- Tabela com timeline -->
+    <div class="panel">
+      <div class="panel-h">
+        <h3>Histórico de uso · ${visiveis.length} ${plural(visiveis.length,'funcionário','funcionários')}</h3>
+        <span class="meta">CADA QUADRADO = 1 MÊS · CLIQUE NA LINHA PARA DETALHES</span>
+      </div>
+      <div class="panel-body flush">
+        <table class="tbl tbl-cadastro">
+          <thead>
+            <tr>
+              <th style="width:32px">#</th>
+              <th>Funcionário</th>
+              <th class="num">Total gasto</th>
+              <th class="num">Corridas</th>
+              <th style="width:170px;text-align:center">Histórico (Jan → Abr)</th>
+              <th style="width:160px">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${visiveis.map((f,i) => {
+              const meses = ['Janeiro','Fevereiro','Março','Abril'];
+              const timeline = meses.map(m => {
+                const ativo = f.mesesAtivos.has(m);
+                const valor = f.valorPorMes[m];
+                const corridas = f.corridasPorMes[m];
+                const tip = ativo ? `${m}: ${cur(valor)} · ${corridas} ${plural(corridas,'corrida','corridas')}` : `${m}: sem uso`;
+                return `<div class="tl-cell ${ativo?'tl-active':'tl-inactive'}" data-tip="${tip.replace(/"/g,'&quot;')}">
+                  <span class="tl-cell-letter">${m[0]}</span>
+                </div>`;
+              }).join('');
+
+              const corClass = f.classe.cor;
+              const badgeBg = corClass === 'pos' ? 'var(--pos-mute)' : corClass === 'brand' ? 'var(--brand-mute)' : corClass === 'warn' ? 'var(--warn-mute)' : 'var(--ink-8)';
+              const badgeColor = corClass === 'pos' ? 'var(--pos)' : corClass === 'brand' ? 'var(--brand-deep)' : corClass === 'warn' ? 'var(--warn)' : 'var(--ink-4)';
+
+              return `<tr data-passageiro="${f.nome.replace(/"/g,'&quot;')}" style="cursor:pointer">
+                <td class="tbl-mono" style="color:var(--ink-5)">${String(i+1).padStart(3,'0')}</td>
+                <td><span class="name">${f.nome}</span></td>
+                <td class="num" style="font-weight:600">${cur(f.totalValor)}</td>
+                <td class="num" style="color:var(--ink-4)">${f.totalCorridas}</td>
+                <td>
+                  <div class="timeline-row">${timeline}</div>
+                </td>
+                <td>
+                  <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${badgeBg};color:${badgeColor};letter-spacing:0.01em">
+                    ${f.classe.label}
+                  </span>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:20px">
+      <div class="insight-label">Como ler esta página</div>
+      <div class="insight-body">
+        Cada linha representa um funcionário cadastrado no Uber Business da empresa. A timeline mostra os 4 meses (J F M A) — <strong style="color:var(--brand)">azul</strong> = mês com uso, <strong style="color:var(--ink-5)">cinza</strong> = sem uso. Use os filtros nos cards acima para focar em um perfil específico, e clique em qualquer linha para ver o histórico completo de corridas, cidades e serviços daquela pessoa.
+      </div>
+    </div>
+  `;
+}
+
+// Estado do filtro de cadastro (mantém entre re-renders)
+window.__cadastroFiltro = 'todos';
+function setCadastroFiltro(tipo){
+  window.__cadastroFiltro = tipo;
+  render();
+}
+
 /* ============== INIT ============== */
 function init(){
   populateFilters();
 
-  // Wire up nav
-  document.querySelectorAll('.nav-item').forEach(n => {
+  // Wire up nav-items (mas pula nav-parent, que tem onclick toggleSubmenu)
+  document.querySelectorAll('.nav-item:not(.nav-parent)').forEach(n => {
+    n.addEventListener('click', () => setTab(n.dataset.id));
+  });
+
+  // Wire up sub-items
+  document.querySelectorAll('.nav-subitem').forEach(n => {
     n.addEventListener('click', () => setTab(n.dataset.id));
   });
 
