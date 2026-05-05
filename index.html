@@ -1658,6 +1658,126 @@ body{
 .recon-compare-tbl .delta.diff{background:var(--warn-mute);color:var(--warn)}
 
 /* =================================================================
+   TABELA MATRICIAL · funcionários × meses
+   ================================================================= */
+.matriz-wrap{
+  overflow-x:auto;
+  margin:0 -28px;
+  padding:0 28px;
+  max-height:600px;
+  overflow-y:auto;
+}
+.matriz-tbl{
+  border-collapse:collapse;
+  min-width:100%;
+}
+.matriz-tbl thead{
+  position:sticky;
+  top:0;
+  background:var(--surface);
+  z-index:5;
+  box-shadow:0 1px 0 var(--ink-7);
+}
+.matriz-tbl th{
+  padding:10px 12px;
+  font-size:10px;
+  font-weight:600;
+  color:var(--ink-4);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  text-align:right;
+  border-bottom:1px solid var(--ink-7);
+  background:var(--surface-2);
+  white-space:nowrap;
+}
+.matriz-tbl th.matriz-th-rank{
+  text-align:left;
+  width:50px;
+  min-width:50px;
+}
+.matriz-tbl th.matriz-th-name{
+  text-align:left;
+  min-width:200px;
+  position:sticky;
+  left:0;
+  background:var(--surface-2);
+  z-index:4;
+}
+.matriz-tbl th.matriz-th-mes{
+  min-width:130px;
+  text-align:right;
+}
+.matriz-tbl th.matriz-th-total{
+  min-width:130px;
+  text-align:right;
+  background:var(--ink);
+  color:#fff;
+}
+.matriz-th-row-totals th{
+  background:var(--surface-3) !important;
+  border-bottom:1.5px solid var(--ink-6);
+}
+.matriz-th-row-totals .matriz-th-total{
+  background:var(--ink) !important;
+  color:#fff;
+}
+.matriz-th-row-totals .matriz-th-total div{color:#fff !important}
+.matriz-th-row-totals .matriz-th-total div:last-child{color:rgba(255,255,255,0.6) !important}
+
+.matriz-tbl tbody tr{
+  transition:background var(--t-fast);
+  cursor:pointer;
+}
+.matriz-tbl tbody tr:hover{background:var(--surface-2)}
+.matriz-tbl tbody tr:hover .matriz-td-name{background:var(--surface-2)}
+.matriz-tbl tbody td{
+  padding:11px 12px;
+  border-bottom:1px solid var(--ink-8);
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+  vertical-align:middle;
+}
+.matriz-tbl tbody td.matriz-td-rank{
+  font-size:11px;
+  color:var(--ink-5);
+  width:50px;
+}
+.matriz-tbl tbody td.matriz-td-name{
+  position:sticky;
+  left:0;
+  background:var(--surface);
+  z-index:2;
+  font-weight:500;
+  color:var(--ink);
+  border-right:1px solid var(--ink-8);
+  min-width:200px;
+}
+.matriz-tbl tbody td.matriz-td-cell{
+  text-align:right;
+  transition:background var(--t-fast);
+}
+.matriz-tbl tbody td.matriz-td-empty{
+  background:var(--surface-3) !important;
+  text-align:center;
+}
+.matriz-tbl tbody td.matriz-td-total{
+  text-align:right;
+  background:var(--surface-3);
+  border-left:1px solid var(--ink-7);
+}
+
+@media (max-width:900px){
+  .matriz-tbl th.matriz-th-name,
+  .matriz-tbl tbody td.matriz-td-name{
+    min-width:160px;
+    max-width:160px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .matriz-tbl th.matriz-th-mes{min-width:110px}
+}
+
+/* =================================================================
    ALERTAS COMPACTOS · formato lista minimalista
    ================================================================= */
 .alert-compact-list{
@@ -6651,79 +6771,133 @@ function renderVizTendencia(porMes){
 
 /* ============== VIZ 2: Funcionários (barras divergentes) ============== */
 function renderVizFuncionarios(porMes){
-  const [a, b] = comparePair;
-  const dA = porMes[a], dB = porMes[b];
-  if (!dA || !dB) return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem dados</div>';
-
-  // Por funcionário em cada mês
-  const passA = new Map(), passB = new Map();
-  dA.txs.forEach(t => {
-    if (!passA.has(t.passageiro)) passA.set(t.passageiro, 0);
-    passA.set(t.passageiro, passA.get(t.passageiro) + t.valor);
+  // Construir mapa global: cada funcionário com valor + corridas em cada mês
+  const mapa = new Map();
+  MESES_ORDER.forEach(mes => {
+    porMes[mes].txs.forEach(t => {
+      if (!mapa.has(t.passageiro)) {
+        mapa.set(t.passageiro, {
+          nome: t.passageiro,
+          mensal: {Janeiro:{valor:0,qtd:0}, Fevereiro:{valor:0,qtd:0}, Março:{valor:0,qtd:0}, Abril:{valor:0,qtd:0}},
+          totalValor: 0,
+          totalCorridas: 0,
+          mesesAtivos: new Set(),
+        });
+      }
+      const f = mapa.get(t.passageiro);
+      f.mensal[t.mes].valor += t.valor;
+      f.totalValor += t.valor;
+      f.mesesAtivos.add(t.mes);
+      if (t.tipo === 'Fare') {
+        f.mensal[t.mes].qtd++;
+        f.totalCorridas++;
+      }
+    });
   });
-  dB.txs.forEach(t => {
-    if (!passB.has(t.passageiro)) passB.set(t.passageiro, 0);
-    passB.set(t.passageiro, passB.get(t.passageiro) + t.valor);
-  });
 
-  const todos = new Set([...passA.keys(), ...passB.keys()]);
-  const mudancas = [...todos].map(nome => {
-    const va = passA.get(nome) || 0;
-    const vb = passB.get(nome) || 0;
-    const diff = vb - va;
-    const pct = va > 0 ? (diff/va*100) : (vb > 0 ? 100 : 0);
-    return {nome, vA:va, vB:vb, diff, pct,
-      novo: va === 0 && vb > 0,
-      sumiu: va > 0 && vb === 0};
-  }).filter(m => Math.abs(m.diff) > 0)
-    .sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff))
-    .slice(0, 18); // top 18 mudanças
-
-  if (mudancas.length === 0) {
-    return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem mudanças entre os meses</div>';
+  if (mapa.size === 0) {
+    return '<div style="text-align:center;padding:40px;color:var(--ink-5)">Sem dados de funcionários</div>';
   }
 
-  const maxAbs = Math.max(...mudancas.map(m => Math.abs(m.diff)), 1);
+  const todos = [...mapa.values()].sort((a,b) => b.totalValor - a.totalValor);
 
-  const rows = mudancas.map(m => {
-    const widthPct = Math.abs(m.diff) / maxAbs * 50;
-    let cls, label, valLabel;
-    if (m.novo) { cls = 'new'; label = 'NOVO'; valLabel = `+${cur(m.vB)}`; }
-    else if (m.sumiu) { cls = 'gone'; label = 'SUMIU'; valLabel = `-${cur(m.vA)}`; }
-    else if (m.diff > 0) { cls = 'up'; label = `+${cur(m.diff)}`; valLabel = label; }
-    else { cls = 'down'; label = cur(m.diff); valLabel = label; }
-    const tip = `<strong>${m.nome}</strong><br>${a}: ${cur(m.vA)}<br>${b}: ${cur(m.vB)}<br>Δ: ${valLabel}${m.pct !== null && !m.novo && !m.sumiu ? ` · ${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(0)}%` : ''}`;
-    const sideStyle = m.diff > 0 ? `width:${widthPct}%;` : `width:${widthPct}%;`;
-    return `
-      <div class="div-row" data-passageiro="${m.nome.replace(/"/g,'&quot;')}" data-tip="${tip.replace(/"/g,'&quot;')}">
-        <div class="div-row-name">${m.nome}</div>
-        <div class="div-row-bar">
-          <div class="div-row-bar-line"></div>
-          <div class="div-row-bar-fill ${cls}" style="${sideStyle}"></div>
-        </div>
-        <div class="div-row-val ${cls === 'new' || cls === 'up' ? 'up' : 'down'}">
-          ${valLabel}
-          ${!m.novo && !m.sumiu ? `<span class="pct">${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(0)}%</span>` : `<span class="pct">${label}</span>`}
-        </div>
-      </div>
-    `;
-  }).join('');
+  // Totais por coluna
+  const totaisColuna = {};
+  MESES_ORDER.forEach(mes => {
+    totaisColuna[mes] = {
+      valor: todos.reduce((s,f) => s + f.mensal[mes].valor, 0),
+      qtd: todos.reduce((s,f) => s + f.mensal[mes].qtd, 0),
+      pessoas: todos.filter(f => f.mesesAtivos.has(mes)).length,
+    };
+  });
+  const totalGeral = todos.reduce((s,f) => s + f.totalValor, 0);
+  const totalCorridasGeral = todos.reduce((s,f) => s + f.totalCorridas, 0);
+
+  // Filtro/busca
+  const search = (window.__funcSearch || '').toLowerCase();
+  const visiveis = search ? todos.filter(f => f.nome.toLowerCase().includes(search)) : todos;
+
+  // Max valor mensal (pra escala da barra)
+  const maxValorMes = Math.max(
+    ...MESES_ORDER.flatMap(mes => todos.map(f => f.mensal[mes].valor)),
+    1
+  );
 
   return `
     <div class="viz-body-h">
       <div>
-        <div class="viz-body-title">Quem mudou em <em>funcionários</em></div>
-        <div style="font-size:12px;color:var(--ink-4);margin-top:4px">${a} → ${b} · top 18 mudanças por valor absoluto · clique para drill-down</div>
+        <div class="viz-body-title">Tabela <em>mensal</em> de funcionários</div>
+        <div style="font-size:12px;color:var(--ink-4);margin-top:4px">Cada coluna = 1 mês · cada linha = 1 funcionário · clique na linha para drill-down</div>
       </div>
-      <div class="viz-body-sub">VERMELHO ↑ AUMENTOU · VERDE ↓ REDUZIU · AZUL ➕ NOVO</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <input type="text" id="func-search" placeholder="Buscar funcionário..." value="${search}"
+          oninput="window.__funcSearch = this.value; clearTimeout(window.__funcSearchT); window.__funcSearchT = setTimeout(() => render(), 250)"
+          style="font-family:inherit;font-size:12px;padding:7px 12px;border:1px solid var(--ink-7);border-radius:var(--r-sm);background:var(--surface-2);color:var(--ink-2);width:200px;outline:none">
+        <span class="viz-body-sub">${visiveis.length} de ${todos.length} ${plural(todos.length,'pessoa','pessoas')}</span>
+      </div>
     </div>
 
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-5);margin-bottom:8px;padding:0 8px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">
-      <span>↑ AUMENTOU (gasto subiu)</span>
-      <span style="color:var(--ink-4)">— BASE 0 —</span>
-      <span>↓ REDUZIU (gasto caiu)</span>
+    <div class="matriz-wrap">
+      <table class="tbl matriz-tbl">
+        <thead>
+          <tr>
+            <th class="matriz-th-rank">#</th>
+            <th class="matriz-th-name">Funcionário</th>
+            ${MESES_ORDER.map(mes => `<th class="num matriz-th-mes">${mes}</th>`).join('')}
+            <th class="num matriz-th-total">Total 4 meses</th>
+          </tr>
+          <tr class="matriz-th-row-totals">
+            <th></th>
+            <th style="font-size:10px;color:var(--ink-5);font-weight:500">soma de todos →</th>
+            ${MESES_ORDER.map(mes => {
+              const t = totaisColuna[mes];
+              return `<th class="num">
+                <div style="font-size:13px;color:var(--ink);font-weight:700">${cur(t.valor)}</div>
+                <div style="font-size:10px;color:var(--ink-5);font-weight:500">${t.pessoas} pessoas · ${t.qtd} corridas</div>
+              </th>`;
+            }).join('')}
+            <th class="num">
+              <div style="font-size:13px;color:var(--ink);font-weight:700">${cur(totalGeral)}</div>
+              <div style="font-size:10px;color:var(--ink-5);font-weight:500">${todos.length} pessoas · ${totalCorridasGeral} corridas</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          ${visiveis.map((f, i) => {
+            return `<tr data-passageiro="${f.nome.replace(/"/g,'&quot;')}" data-tip="<strong>${f.nome}</strong><br>Total 4 meses: ${cur(f.totalValor)}<br>${f.totalCorridas} corridas<br>${f.mesesAtivos.size} ${plural(f.mesesAtivos.size,'mês ativo','meses ativos')}<br><span style='opacity:0.7;font-size:11px'>Clique para drill-down</span>" style="cursor:pointer">
+              <td class="tbl-mono matriz-td-rank">${String(i+1).padStart(3,'0')}</td>
+              <td class="matriz-td-name"><span class="name">${f.nome}</span></td>
+              ${MESES_ORDER.map(mes => {
+                const m = f.mensal[mes];
+                if (m.valor === 0) {
+                  return `<td class="num matriz-td-cell matriz-td-empty">
+                    <span style="color:var(--ink-6);font-size:11px">—</span>
+                  </td>`;
+                }
+                const intensity = Math.min(m.valor / maxValorMes, 1);
+                const bgOpacity = 0.04 + intensity * 0.12;
+                return `<td class="num matriz-td-cell" style="background:rgba(37,99,235,${bgOpacity})">
+                  <div style="font-size:13px;color:var(--ink);font-weight:600">${cur(m.valor)}</div>
+                  <div style="font-size:10px;color:var(--ink-5);font-weight:500">${m.qtd} ${plural(m.qtd,'corrida','corridas')}</div>
+                </td>`;
+              }).join('')}
+              <td class="num matriz-td-total">
+                <div style="font-size:14px;color:var(--ink);font-weight:700">${cur(f.totalValor)}</div>
+                <div style="font-size:10px;color:var(--ink-5);font-weight:500">${f.totalCorridas} ${plural(f.totalCorridas,'corrida','corridas')}</div>
+              </td>
+            </tr>`;
+          }).join('')}
+          ${visiveis.length === 0 ? `<tr><td colspan="${MESES_ORDER.length+3}" style="text-align:center;padding:32px;color:var(--ink-5);font-size:13px">Nenhum funcionário encontrado para "${search}"</td></tr>` : ''}
+        </tbody>
+      </table>
     </div>
-    <div class="diverging-list">${rows}</div>
+
+    <div class="insight" style="margin-top:18px">
+      <div class="insight-label">Como ler esta tabela</div>
+      <div class="insight-body">
+        Cada linha representa um funcionário, ordenado pelo total gasto nos 4 meses. As colunas Janeiro/Fevereiro/Março/Abril mostram o gasto e número de corridas em cada mês. <strong>Células vazias (—)</strong> indicam que o funcionário não usou o Uber Business naquele mês. A intensidade do azul de fundo aumenta com o valor gasto. Clique em qualquer linha para abrir o histórico completo daquele funcionário.
+      </div>
+    </div>
   `;
 }
 
@@ -6927,8 +7101,8 @@ function renderComparacaoSub(sub){
 
 /* Seletor de par compacto · usado só nas sub-abas de gráfico (não na Visão geral) */
 function renderSeletorParCompacto(porMes){
-  // Tendência não precisa de par
-  if (activeTab === 'cmp-tendencia') return '';
+  // Sub-abas que NÃO precisam do seletor de par
+  if (activeTab === 'cmp-tendencia' || activeTab === 'cmp-funcionarios') return '';
 
   const validMeses = MESES_ORDER.filter(m => porMes[m].total > 0);
   if (validMeses.length < 2) return '';
