@@ -421,6 +421,27 @@ body{
   color:var(--ink-2);
   background:var(--surface-2);
 }
+.filter-export{
+  font-family:inherit;
+  font-size:12px;
+  color:#fff;
+  background:var(--ink);
+  border:1px solid var(--ink);
+  border-radius:var(--r-sm);
+  padding:6px 12px;
+  cursor:pointer;
+  transition:all var(--t-fast);
+  font-weight:500;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.filter-export:hover{
+  background:var(--brand);
+  border-color:var(--brand);
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(37,99,235,0.25);
+}
 .filter-status{
   margin-left:auto;
   font-size:11px;
@@ -727,6 +748,21 @@ body{
   color:var(--ink-5);
   margin-top:1px;
 }
+.hbar-var{
+  display:inline-block;
+  margin-top:4px;
+  font-size:10px;
+  font-weight:700;
+  padding:2px 7px;
+  border-radius:4px;
+  letter-spacing:0.02em;
+  font-variant-numeric:tabular-nums;
+}
+.hbar-var.up{background:var(--neg-mute);color:var(--neg)}
+.hbar-var.down{background:var(--pos-mute);color:var(--pos)}
+.hbar-var.neut{background:var(--ink-8);color:var(--ink-5)}
+.hbar-var.new{background:var(--brand-mute);color:var(--brand-deep)}
+.hbar-var.gone{background:var(--ink-7);color:var(--ink-4)}
 
 /* tables */
 .tbl{
@@ -2655,6 +2691,154 @@ body{
   .month-bars{height:160px}
   .hbar{grid-template-columns:100px 1fr 90px;gap:10px}
 }
+/* =================================================================
+   IMPRESSÃO / EXPORTAR PDF
+   ================================================================= */
+@media print {
+  /* Tamanho da página */
+  @page {
+    size: A4;
+    margin: 1.5cm 1.2cm;
+  }
+
+  /* Reset e cores forçadas */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    font-size: 10pt;
+  }
+
+  /* Esconde elementos não-imprimíveis */
+  .sidebar,
+  .filter-bar,
+  .modal-backdrop,
+  .filter-export,
+  .filter-clear,
+  .dd-btn,
+  .show-more,
+  #global-tooltip,
+  .nav-parent,
+  .nav-submenu,
+  .mes-pills,
+  button[onclick*="setComparePair"] {
+    display: none !important;
+  }
+
+  /* Layout principal vira tela cheia */
+  .layout {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+  .main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  #content {
+    padding: 0 !important;
+  }
+
+  /* Cabeçalho de impressão */
+  body::before {
+    content: "RC9 Comércio · Dashboard Uber Business · Jan-Abr 2026";
+    display: block;
+    font-size: 9pt;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 0 6pt 0;
+    margin: 0 0 16pt 0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Quebras de página */
+  .panel,
+  .insight,
+  .economia-card,
+  .alert-compact,
+  .month-card,
+  .change-card,
+  .economia-resumo {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Reduz sombras (consomem tinta sem agregar) */
+  .panel, .kpi, .month-card, .alert-compact, .economia-card,
+  .economia-resumo-card, .viz-section {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* Aproveita melhor o espaço horizontal */
+  .three-col, .two-col, .split-2-1 {
+    display: grid !important;
+  }
+
+  /* Tabelas: garantir que cabem */
+  .tbl, .matriz-tbl {
+    font-size: 9pt !important;
+  }
+  .tbl thead {
+    display: table-header-group;
+  }
+  .tbl tr {
+    page-break-inside: avoid;
+  }
+
+  /* Reduzir paddings */
+  .panel-body { padding: 12pt 14pt !important; }
+  .kpi { padding: 12pt 14pt !important; }
+
+  /* Banners e filtros ativos */
+  .active-banner {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* Mantém cores dos KPIs e badges */
+  .kpi.featured {
+    background: #0f172a !important;
+    color: #fff !important;
+  }
+  .kpi.featured *, .kpi.featured .kpi-label, .kpi.featured .kpi-value, .kpi.featured .kpi-foot {
+    color: #fff !important;
+  }
+
+  /* Remove cursores e transições */
+  * {
+    transition: none !important;
+    cursor: default !important;
+  }
+
+  /* Limita altura das tabelas matriciais (que tinham overflow) */
+  .matriz-wrap {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .diverging-list {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* SVG e gráficos: mantém */
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -2802,6 +2986,10 @@ body{
         <input type="number" id="f-valor-max" placeholder="máx" oninput="setValorFilter()" step="0.01" min="0" class="filter-num">
       </div>
       <button class="filter-clear" onclick="clearAllFilters()">Limpar</button>
+      <button class="filter-export" onclick="exportToPDF()" title="Exportar a aba atual em PDF">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar PDF
+      </button>
       <div class="filter-status" id="filter-status"></div>
     </div>
 
@@ -3010,6 +3198,38 @@ function emptyState(msg){
 function setFilter(key, value){
   filters[key] = value;
   render();
+}
+
+function exportToPDF(){
+  // Configura título da página para que o PDF saia com nome bonito
+  const tabNames = {
+    'visao': 'Visao Geral',
+    'cidades': 'Cidades',
+    'servicos': 'Servicos',
+    'passageiros': 'Funcionarios - Ranking',
+    'func-cadastro': 'Funcionarios - Cadastro e atividade',
+    'comparacao': 'Comparacao Mensal',
+    'cmp-visao': 'Comparacao - Visao geral',
+    'cmp-tendencia': 'Comparacao - Tendencia mensal',
+    'cmp-funcionarios': 'Comparacao - Funcionarios',
+    'cmp-cidades': 'Comparacao - Cidades',
+    'cmp-servicos': 'Comparacao - Servicos',
+    'conciliacao': 'Conciliacao',
+    'gorjetas': 'Gorjetas e Ajustes',
+    'alertas': 'Alertas',
+    'economia': 'Economia',
+  };
+  const tabName = tabNames[activeTab] || 'Dashboard';
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const originalTitle = document.title;
+  document.title = `RC9 - ${tabName} - ${today}`;
+
+  // Pequena espera pra garantir que o título seja aplicado, depois imprime
+  setTimeout(() => {
+    window.print();
+    // Restaura título depois
+    setTimeout(() => { document.title = originalTitle; }, 500);
+  }, 100);
 }
 
 function clearAllFilters(){
@@ -3764,13 +3984,32 @@ function renderCidades(){
       <div class="panel">
         <div class="panel-h">
           <h3>Ranking por cidade</h3>
-          <span class="meta">CLIQUE PARA VER PERFIL DA CIDADE</span>
+          <span class="meta">VALOR · % DO TOTAL · VARIAÇÃO JAN → ABR</span>
         </div>
         <div class="panel-body">
           <div class="hbar-list">
             ${cidades.map(c => {
               const sel = filters.cidade === c.cidade ? 'selected' : '';
-              return `<div class="hbar ${sel}" data-set-filter="cidade|${c.cidade}" data-tip="<strong>${c.cidade}</strong><br>${cur(c.valor)} · ${c.qtd} corridas · ${c.pct.toFixed(1)}% do total<br><span style='opacity:0.7;font-size:11px'>Clique para filtrar dashboard</span>">
+              // Variação Jan → Abr
+              const cVar = crescimento.find(x => x.cidade === c.cidade);
+              let varHtml = '<span class="hbar-var neut">—</span>';
+              let varTip = '';
+              if (cVar) {
+                if (cVar.jan === 0 && cVar.abr > 0) {
+                  varHtml = `<span class="hbar-var new">NOVA</span>`;
+                  varTip = `<br>Apareceu em Abril (Jan: R$ 0 · Abr: ${cur(cVar.abr)})`;
+                } else if (cVar.jan > 0 && cVar.abr === 0) {
+                  varHtml = `<span class="hbar-var gone">SUMIU</span>`;
+                  varTip = `<br>Saiu em Abril (Jan: ${cur(cVar.jan)} · Abr: R$ 0)`;
+                } else if (cVar.jan > 0) {
+                  const pct = (cVar.diff / cVar.jan) * 100;
+                  const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : 'neut';
+                  const arrow = pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+                  varHtml = `<span class="hbar-var ${cls}">${arrow} ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</span>`;
+                  varTip = `<br>Jan: ${cur(cVar.jan)} → Abr: ${cur(cVar.abr)} · Δ ${cur(cVar.diff)}`;
+                }
+              }
+              return `<div class="hbar ${sel}" data-set-filter="cidade|${c.cidade}" data-tip="<strong>${c.cidade}</strong><br>${cur(c.valor)} · ${c.qtd} corridas · ${c.pct.toFixed(1)}% do total${varTip}<br><span style='opacity:0.7;font-size:11px'>Clique para filtrar dashboard</span>">
                 <div class="hbar-name">
                   ${c.cidade}
                   <button class="dd-btn" onclick="event.stopPropagation();openCidadeModal('${c.cidade.replace(/'/g,"\\'")}')">↗ Drill-down</button>
@@ -3779,6 +4018,7 @@ function renderCidades(){
                 <div class="hbar-vals">
                   <div class="hbar-val">${cur(c.valor)}</div>
                   <div class="hbar-pct">${c.pct.toFixed(1)}% · ${c.qtd}</div>
+                  ${varHtml}
                 </div>
               </div>`;
             }).join('')}
