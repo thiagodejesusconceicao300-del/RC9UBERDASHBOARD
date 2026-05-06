@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -3048,11 +3048,499 @@ body{
     display: none !important;
   }
 }
+/* =================================================================
+   TELAS DE AUTENTICAÇÃO · Login e Boas-vindas
+   ================================================================= */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #fafafa 0%, #f1f5f9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  overflow: auto;
+}
+.auth-bg-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: radial-gradient(circle at 25% 25%, rgba(37,99,235,0.05) 0%, transparent 50%),
+                    radial-gradient(circle at 75% 75%, rgba(15,23,42,0.04) 0%, transparent 50%);
+}
+.auth-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 50px rgba(15,23,42,0.08);
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  border: 1px solid rgba(15,23,42,0.04);
+}
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--ink-7);
+}
+.auth-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--ink);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+.auth-brand-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.auth-brand-sub {
+  font-size: 11px;
+  color: var(--ink-5);
+  margin-top: 1px;
+  letter-spacing: 0.02em;
+}
+.auth-title {
+  font-family: var(--font-serif, 'Instrument Serif', serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--ink-4);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.auth-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.auth-field input {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 11px 14px;
+  border: 1px solid var(--ink-7);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+  transition: all var(--t-fast);
+  width: 100%;
+}
+.auth-field input:focus {
+  border-color: var(--brand);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+}
+.auth-pwd-wrap {
+  position: relative;
+}
+.auth-eye {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ink-5);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: all var(--t-fast);
+}
+.auth-eye:hover {
+  color: var(--ink);
+  background: var(--ink-8);
+}
+.auth-error {
+  background: var(--neg-mute);
+  color: var(--neg);
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(220,38,38,0.15);
+  display: none;
+}
+.auth-error.show { display: block; }
+.auth-btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: var(--ink);
+  border: none;
+  border-radius: 9px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  margin-top: 4px;
+  letter-spacing: -0.01em;
+}
+.auth-btn:hover {
+  background: var(--brand);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+}
+.auth-btn:active { transform: translateY(0); }
+.auth-foot {
+  margin-top: 32px;
+  text-align: center;
+}
+.auth-foot-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--ink-7), transparent);
+  margin-bottom: 14px;
+}
+.auth-foot-text {
+  font-size: 10px;
+  color: var(--ink-5);
+  letter-spacing: 0.04em;
+}
+
+/* WELCOME */
+.welcome-card {
+  background: white;
+  border-radius: 24px;
+  padding: 56px 48px 44px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 60px rgba(15,23,42,0.1);
+  width: 100%;
+  max-width: 520px;
+  position: relative;
+  text-align: center;
+  border: 1px solid rgba(15,23,42,0.04);
+}
+.welcome-emoji {
+  font-size: 56px;
+  margin-bottom: 16px;
+  line-height: 1;
+  animation: wave 1.5s ease-in-out;
+  display: inline-block;
+}
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(15deg); }
+  80% { transform: rotate(-5deg); }
+}
+.welcome-title {
+  font-family: var(--font-serif, 'Instrument Serif', serif);
+  font-size: 38px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+.welcome-title span {
+  color: var(--brand);
+  font-style: italic;
+}
+.welcome-subtitle {
+  font-size: 14px;
+  color: var(--ink-4);
+  margin-bottom: 36px;
+  line-height: 1.5;
+}
+.welcome-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: var(--surface-2);
+  border-radius: 14px;
+  border: 1px solid var(--ink-8);
+}
+.welcome-stat-label {
+  font-size: 10px;
+  color: var(--ink-5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.welcome-stat-value {
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.welcome-btn {
+  width: 100%;
+  font-size: 15px;
+  padding: 14px;
+}
+
+@media (max-width: 480px) {
+  .auth-card, .welcome-card {
+    padding: 32px 24px;
+  }
+  .welcome-title { font-size: 30px; }
+  .welcome-stats { grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* User badge na sidebar */
+.user-badge {
+  margin: 14px 12px 8px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--ink-8);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+.user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-role {
+  font-size: 10px;
+  color: var(--ink-5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 1px;
+}
+.user-role.admin {
+  color: var(--brand-deep);
+  font-weight: 700;
+}
+.logout-btn {
+  background: none;
+  border: 1px solid var(--ink-7);
+  color: var(--ink-4);
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.logout-btn:hover {
+  background: var(--neg-mute);
+  border-color: var(--neg);
+  color: var(--neg);
+}
+
+/* Tela de gerenciar acessos */
+.access-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+.access-user-card {
+  background: var(--surface);
+  border: 1px solid var(--ink-7);
+  border-radius: 12px;
+  padding: 20px;
+}
+.access-user-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink-8);
+}
+.access-user-name {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 15px;
+}
+.access-user-stats {
+  font-size: 11px;
+  color: var(--ink-5);
+  margin-left: auto;
+}
+.access-perm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ink-9, #fafafa);
+  cursor: pointer;
+  user-select: none;
+}
+.access-perm:last-child { border-bottom: none; }
+.access-perm-label {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.access-perm-section {
+  font-size: 10px;
+  color: var(--ink-5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  padding: 10px 0 6px;
+  border-bottom: none;
+}
+/* Toggle switch */
+.toggle {
+  width: 36px;
+  height: 20px;
+  background: var(--ink-7);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background var(--t-fast);
+  border: none;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--t-fast);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.toggle.on {
+  background: var(--pos);
+}
+.toggle.on::after {
+  transform: translateX(16px);
+}
+
 </style>
 </head>
 <body>
 
-<div class="app">
+<!-- ===========================
+     TELA DE LOGIN
+     =========================== -->
+<div class="auth-screen" id="auth-login">
+  <div class="auth-bg-grain"></div>
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo">R9</div>
+      <div>
+        <div class="auth-brand-name">RC9 Comércio</div>
+        <div class="auth-brand-sub">Dashboard Uber Business</div>
+      </div>
+    </div>
+    <h1 class="auth-title">Bem-vindo de volta</h1>
+    <p class="auth-subtitle">Entre com suas credenciais para acessar o painel.</p>
+
+    <form class="auth-form" id="login-form" onsubmit="handleLogin(event)">
+      <label class="auth-field">
+        <span class="auth-label">Usuário</span>
+        <input type="text" id="login-user" autocomplete="username" required spellcheck="false" autocapitalize="none">
+      </label>
+      <label class="auth-field">
+        <span class="auth-label">Senha</span>
+        <div class="auth-pwd-wrap">
+          <input type="password" id="login-pwd" autocomplete="current-password" required>
+          <button type="button" class="auth-eye" onclick="togglePwd()" aria-label="Mostrar senha">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </label>
+      <div id="login-error" class="auth-error"></div>
+      <button type="submit" class="auth-btn">Entrar no painel</button>
+    </form>
+
+    <div class="auth-foot">
+      <div class="auth-foot-line"></div>
+      <div class="auth-foot-text">Análise Uber Business · RC9 Comércio e Importação · 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     TELA DE BOAS-VINDAS
+     =========================== -->
+<div class="auth-screen welcome" id="auth-welcome" style="display:none">
+  <div class="auth-bg-grain"></div>
+  <div class="welcome-card">
+    <div class="welcome-emoji">👋</div>
+    <h1 class="welcome-title">Olá, <span id="welcome-name">visitante</span>!</h1>
+    <p class="welcome-subtitle" id="welcome-msg">Bem-vindo de volta ao painel Uber Business da RC9.</p>
+
+    <div class="welcome-stats">
+      <div class="welcome-stat">
+        <div class="welcome-stat-label">Período</div>
+        <div class="welcome-stat-value">Jan – Abr 2026</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="welcome-stat-label">Transações</div>
+        <div class="welcome-stat-value">1.893</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="welcome-stat-label">Funcionários</div>
+        <div class="welcome-stat-value">55</div>
+      </div>
+    </div>
+
+    <button class="auth-btn welcome-btn" onclick="enterDashboard()">Acessar dashboard</button>
+  </div>
+</div>
+
+<div class="app" id="app-shell" style="display:none">
   <!-- ===========================
        SIDEBAR
        =========================== -->
@@ -3407,11 +3895,379 @@ function emptyState(msg){
   `;
 }
 
-/* ============== FILTERS ============== */
+/* =================================================================
+   FILTERS
+   ================================================================= */
 function setFilter(key, value){
   filters[key] = value;
   render();
 }
+
+/* =================================================================
+   SISTEMA DE AUTENTICAÇÃO E PERMISSÕES
+   ⚠️  Login client-side: apenas organizacional, NÃO é segurança real.
+   Quem ver o código fonte vê as credenciais. Para segurança real,
+   seria necessário backend com sessão tokenizada.
+   ================================================================= */
+
+// Banco de usuários (senhas em claro pq é client-side)
+const USERS = {
+  'thiagoj': {
+    name: 'Thiago',
+    fullName: 'Thiago J',
+    pwd: 'Thiago123',
+    role: 'admin',
+  },
+  'thales': {
+    name: 'Thales',
+    fullName: 'Thales',
+    pwd: 'Thales123',
+    role: 'user',
+  },
+  'brunolima': {
+    name: 'Bruno',
+    fullName: 'Bruno Lima',
+    pwd: 'Brunolima123',
+    role: 'user',
+  },
+};
+
+// Lista de todas as abas (para gerenciamento de permissões)
+const ALL_TABS = [
+  {id: 'visao',           label: 'Visão geral',              section: 'ANÁLISE'},
+  {id: 'cidades',         label: 'Cidades',                  section: 'ANÁLISE'},
+  {id: 'servicos',        label: 'Serviços',                 section: 'ANÁLISE'},
+  {id: 'passageiros',     label: 'Top consumidores',         section: 'ANÁLISE'},
+  {id: 'func-cadastro',   label: 'Padrão de uso (J/F/M/A)',  section: 'ANÁLISE'},
+  {id: 'func-cadastrados',label: 'Cadastro oficial vs uso',  section: 'ANÁLISE'},
+  {id: 'comparacao',      label: 'Comparação mensal',        section: 'APRESENTAÇÃO'},
+  {id: 'conciliacao',     label: 'Conciliação',              section: 'APRESENTAÇÃO'},
+  {id: 'gorjetas',        label: 'Gorjetas e ajustes',       section: 'OPERAÇÃO'},
+  {id: 'alertas',         label: 'Alertas',                  section: 'OPERAÇÃO'},
+  {id: 'economia',        label: 'Economia',                 section: 'OPERAÇÃO'},
+];
+
+// Permissões padrão (Thiago define depois)
+const DEFAULT_PERMS = {
+  'thiagoj':   ALL_TABS.map(t => t.id), // admin = tudo
+  'thales':    ['visao', 'cidades', 'servicos', 'passageiros'],
+  'brunolima': ['visao', 'cidades', 'servicos', 'passageiros'],
+};
+
+// Estado da sessão
+let currentUser = null;
+// Permissões customizadas (Thiago pode editar) — persiste no navegador
+let userPermissions = {};
+
+function loadPermissions(){
+  try {
+    const saved = localStorage.getItem('rc9_perms');
+    if (saved) {
+      userPermissions = JSON.parse(saved);
+    } else {
+      userPermissions = {...DEFAULT_PERMS};
+    }
+  } catch(e) {
+    userPermissions = {...DEFAULT_PERMS};
+  }
+}
+
+function savePermissions(){
+  try {
+    localStorage.setItem('rc9_perms', JSON.stringify(userPermissions));
+  } catch(e) {}
+}
+
+function getUserPerms(userKey){
+  return userPermissions[userKey] || [];
+}
+
+function userCanSee(tabId){
+  if (!currentUser) return false;
+  if (currentUser.role === 'admin') return true;
+  return (userPermissions[currentUser.key] || []).includes(tabId);
+}
+
+// === FLUXO LOGIN ===
+
+function handleLogin(e){
+  e.preventDefault();
+  const u = document.getElementById('login-user').value.trim().toLowerCase();
+  const p = document.getElementById('login-pwd').value;
+  const errEl = document.getElementById('login-error');
+
+  // Aliases para facilitar (aceita variações de digitação)
+  const aliases = {
+    'thiago': 'thiagoj',
+    'thiagoj': 'thiagoj',
+    'thiago j': 'thiagoj',
+    'thales': 'thales',
+    'thalesvalladares': 'thales',
+    'bruno': 'brunolima',
+    'brunolima': 'brunolima',
+    'bruno lima': 'brunolima',
+  };
+  const userKey = aliases[u] || u;
+
+  const user = USERS[userKey];
+  if (!user) {
+    errEl.textContent = 'Usuário não encontrado.';
+    errEl.classList.add('show');
+    document.getElementById('login-user').focus();
+    return;
+  }
+  if (user.pwd !== p) {
+    errEl.textContent = 'Senha incorreta.';
+    errEl.classList.add('show');
+    document.getElementById('login-pwd').focus();
+    return;
+  }
+
+  errEl.classList.remove('show');
+
+  // Login OK
+  currentUser = {key: userKey, ...user};
+  try { sessionStorage.setItem('rc9_session', JSON.stringify({key: userKey, ts: Date.now()})); } catch(e){}
+
+  // Ir para Welcome
+  document.getElementById('auth-login').style.display = 'none';
+  showWelcome();
+}
+
+function showWelcome(){
+  document.getElementById('welcome-name').textContent = currentUser.name;
+  let msg = 'Bem-vindo de volta ao painel Uber Business da RC9.';
+  if (currentUser.role === 'admin') {
+    msg = 'Você tem acesso total ao painel e pode gerenciar permissões dos demais usuários.';
+  }
+  document.getElementById('welcome-msg').textContent = msg;
+  document.getElementById('auth-welcome').style.display = 'flex';
+}
+
+function enterDashboard(){
+  document.getElementById('auth-welcome').style.display = 'none';
+  document.getElementById('app-shell').style.display = '';
+
+  // Inicializa o app só agora
+  initDashboard();
+}
+
+function logout(){
+  if (!confirm('Tem certeza que deseja sair?')) return;
+  try { sessionStorage.removeItem('rc9_session'); } catch(e){}
+  currentUser = null;
+  location.reload();
+}
+
+function togglePwd(){
+  const inp = document.getElementById('login-pwd');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// === GERENCIAMENTO DE PERMISSÕES (admin) ===
+
+function togglePerm(userKey, tabId){
+  if (!userPermissions[userKey]) userPermissions[userKey] = [];
+  const idx = userPermissions[userKey].indexOf(tabId);
+  if (idx >= 0) {
+    userPermissions[userKey].splice(idx, 1);
+  } else {
+    userPermissions[userKey].push(tabId);
+  }
+  savePermissions();
+  if (typeof render === 'function') render();
+}
+
+function resetPerms(userKey){
+  if (!confirm('Restaurar permissões padrão para este usuário?')) return;
+  userPermissions[userKey] = [...(DEFAULT_PERMS[userKey] || [])];
+  savePermissions();
+  render();
+}
+
+function renderGerenciarAcessos(){
+  // Admin only
+  if (currentUser.role !== 'admin') {
+    return '<div style="padding:40px;text-align:center;color:var(--ink-5)">Acesso restrito</div>';
+  }
+
+  // Listar usuários não-admin
+  const users = Object.keys(USERS).filter(k => USERS[k].role !== 'admin');
+
+  return `
+    ${pageHeader(
+      'Administração',
+      'Gerenciar <em>acessos</em>',
+      'Defina o que cada usuário pode ver. Marque as abas que cada pessoa terá permissão de acessar.'
+    )}
+    ${activeBanner('')}
+
+    <div class="access-grid">
+      ${users.map(uk => {
+        const u = USERS[uk];
+        const perms = userPermissions[uk] || [];
+        const initials = u.name.charAt(0).toUpperCase();
+        return `
+          <div class="access-user-card">
+            <div class="access-user-h">
+              <div class="user-avatar" style="width:36px;height:36px;font-size:14px">${initials}</div>
+              <div>
+                <div class="access-user-name">${u.fullName}</div>
+                <div class="user-role">Usuário · login: ${uk}</div>
+              </div>
+              <div class="access-user-stats">${perms.length} de ${ALL_TABS.length} abas</div>
+            </div>
+
+            ${(() => {
+              // Agrupar por seção
+              const sections = {};
+              ALL_TABS.forEach(t => {
+                if (!sections[t.section]) sections[t.section] = [];
+                sections[t.section].push(t);
+              });
+              return Object.entries(sections).map(([sec, tabs]) => `
+                <div class="access-perm-section">${sec}</div>
+                ${tabs.map(t => `
+                  <div class="access-perm" onclick="togglePerm('${uk}', '${t.id}')">
+                    <span class="access-perm-label">${t.label}</span>
+                    <button class="toggle ${perms.includes(t.id) ? 'on' : ''}" type="button" aria-label="Toggle ${t.label}"></button>
+                  </div>
+                `).join('')}
+              `).join('');
+            })()}
+
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--ink-8);display:flex;gap:8px">
+              <button class="filter-clear" onclick="resetPerms('${uk}')" style="font-size:11px">Restaurar padrão</button>
+              <button class="filter-clear" onclick="userPermissions['${uk}']=ALL_TABS.map(t=>t.id);savePermissions();render()" style="font-size:11px">Liberar tudo</button>
+              <button class="filter-clear" onclick="userPermissions['${uk}']=[];savePermissions();render()" style="font-size:11px">Bloquear tudo</button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div class="insight" style="margin-top:24px">
+      <div class="insight-label">Como isso funciona</div>
+      <div class="insight-body">
+        Marque o toggle ao lado de cada aba para liberar ou bloquear o acesso ao usuário correspondente. As mudanças são salvas automaticamente e ficam ativas na próxima vez que o usuário fizer login. ${currentUser ? '<strong>Você (' + currentUser.name + ') é admin</strong> e tem acesso total — sua permissão não pode ser editada.' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function checkSession(){
+  try {
+    const sess = sessionStorage.getItem('rc9_session');
+    if (sess) {
+      const {key, ts} = JSON.parse(sess);
+      // Sessão dura 8 horas
+      if (Date.now() - ts < 8 * 60 * 60 * 1000 && USERS[key]) {
+        currentUser = {key, ...USERS[key]};
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
+function applyPermissionsToMenu(){
+  if (!currentUser) return;
+
+  // Esconder itens conforme permissão
+  document.querySelectorAll('.nav-item, .nav-subitem').forEach(n => {
+    const id = n.dataset.id;
+    if (!id) return;
+    const allowed = userCanSee(id);
+    n.style.display = allowed ? '' : 'none';
+  });
+
+  // Ocultar parent "Funcionários" se nenhum filho permitido
+  const funcChildren = ['passageiros','func-cadastro','func-cadastrados'];
+  const funcAllowed = funcChildren.some(id => userCanSee(id));
+  const funcParent = document.querySelector('.nav-parent[data-parent="passageiros"]');
+  if (funcParent) funcParent.style.display = funcAllowed ? '' : 'none';
+
+  const cmpChildren = ['cmp-visao','cmp-tendencia','cmp-funcionarios','cmp-cidades','cmp-servicos'];
+  const cmpAllowed = userCanSee('comparacao');
+  const cmpParent = document.querySelector('.nav-parent[data-parent="comparacao"]');
+  if (cmpParent) cmpParent.style.display = cmpAllowed ? '' : 'none';
+
+  // Para admin: adicionar item "Gerenciar acessos" no menu
+  if (currentUser.role === 'admin') {
+    addAdminMenuItem();
+  }
+
+  // Garantir que activeTab inicial é uma aba permitida
+  if (!userCanSee(activeTab) && activeTab !== 'gerenciar-acessos') {
+    const firstAllowed = ALL_TABS.find(t => userCanSee(t.id));
+    if (firstAllowed) activeTab = firstAllowed.id;
+  }
+}
+
+function addAdminMenuItem(){
+  // Verifica se já existe
+  if (document.querySelector('[data-id="gerenciar-acessos"]')) return;
+
+  const sidebar = document.querySelector('.sidebar nav') || document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  // Criar nova seção ADMIN
+  const sec = document.createElement('div');
+  sec.className = 'nav-section';
+  sec.innerHTML = `
+    <div class="nav-section-label" style="margin-top:24px">ADMIN</div>
+    <button class="nav-item" data-id="gerenciar-acessos">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Gerenciar acessos
+    </button>
+  `;
+  sidebar.appendChild(sec);
+
+  // Wire up
+  const btn = sec.querySelector('[data-id="gerenciar-acessos"]');
+  btn.addEventListener('click', () => setTab('gerenciar-acessos'));
+}
+
+function injectUserBadge(){
+  if (!currentUser) return;
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  // Verificar se já existe
+  if (document.querySelector('.user-badge')) return;
+
+  const badge = document.createElement('div');
+  badge.className = 'user-badge';
+  const initials = currentUser.name.charAt(0).toUpperCase();
+  badge.innerHTML = `
+    <div class="user-avatar">${initials}</div>
+    <div class="user-info">
+      <div class="user-name">${currentUser.fullName}</div>
+      <div class="user-role ${currentUser.role === 'admin' ? 'admin' : ''}">${currentUser.role === 'admin' ? '★ Administrador' : 'Usuário'}</div>
+    </div>
+    <button class="logout-btn" onclick="logout()" title="Sair">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  `;
+
+  // Inserir no fim da sidebar
+  sidebar.appendChild(badge);
+}
+
+// === BOOT GERAL ===
+
+function bootApp(){
+  loadPermissions();
+  // Se sessão válida, vai direto pro dashboard
+  if (checkSession()) {
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('app-shell').style.display = '';
+    initDashboard();
+  }
+  // senão fica na tela de login (default)
+}
+
+document.addEventListener('DOMContentLoaded', bootApp);
 
 function exportToPDF(){
   const tabNames = {
@@ -3476,6 +4332,10 @@ function setValorFilter(){
 }
 
 function setTab(id){
+  // Permissões: bloqueia se usuário não tem acesso
+  if (currentUser && !userCanSee(id) && id !== 'gerenciar-acessos') {
+    return; // ignora silenciosamente
+  }
   activeTab = id;
 
   // Detectar se é um sub-item (cmp-*) e marcar parent ativo também
@@ -3856,6 +4716,7 @@ function render(){
     case 'gastos': content.innerHTML = renderGastos(); break;
     case 'alertas': content.innerHTML = renderAlertas(); break;
     case 'economia': content.innerHTML = renderEconomia(); break;
+    case 'gerenciar-acessos': content.innerHTML = renderGerenciarAcessos(); break;
   }
 
   // Wire up clickable elements
@@ -8097,7 +8958,7 @@ function setCvaFiltro(tipo){
 }
 
 /* ============== INIT ============== */
-function init(){
+function initDashboard(){
   populateFilters();
 
   // Wire up nav-items (mas pula nav-parent, que tem onclick toggleSubmenu)
@@ -8110,10 +8971,14 @@ function init(){
     n.addEventListener('click', () => setTab(n.dataset.id));
   });
 
+  // Esconder abas conforme permissões + adicionar gerenciar acessos para admin
+  applyPermissionsToMenu();
+
+  // User badge na sidebar
+  injectUserBadge();
+
   render();
 }
-
-document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
