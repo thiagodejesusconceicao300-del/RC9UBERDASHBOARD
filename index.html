@@ -3911,26 +3911,63 @@ function setFilter(key, value){
    ================================================================= */
 
 // Banco de usuários (senhas em claro pq é client-side)
-const USERS = {
+// Usuários padrão (sempre presentes, podem ser editados)
+const DEFAULT_USERS = {
   'thiagoj': {
     name: 'Thiago',
     fullName: 'Thiago J',
+    email: 'thiaguinho12jr@gmail.com',
     pwd: 'Thiago123',
     role: 'admin',
+    isDefault: true,
   },
   'thales': {
     name: 'Thales',
     fullName: 'Thales',
+    email: '',
     pwd: 'Thales123',
     role: 'user',
+    isDefault: true,
   },
   'brunolima': {
     name: 'Bruno',
     fullName: 'Bruno Lima',
+    email: 'brunolima@vxcase.com.br',
     pwd: 'Brunolima123',
     role: 'user',
+    isDefault: true,
   },
 };
+
+// USERS é mutável: começa com defaults + carrega customizados do localStorage
+let USERS = {};
+
+function loadUsers(){
+  USERS = {};
+  // Defaults
+  Object.keys(DEFAULT_USERS).forEach(k => {
+    USERS[k] = {...DEFAULT_USERS[k]};
+  });
+  // Custom (sobrescreve defaults se houver mudança de senha por exemplo)
+  try {
+    const saved = localStorage.getItem('rc9_users');
+    if (saved) {
+      const customUsers = JSON.parse(saved);
+      Object.keys(customUsers).forEach(k => {
+        USERS[k] = {...customUsers[k]};
+      });
+    }
+  } catch(e) {}
+}
+
+function saveUsers(){
+  try {
+    // Salva todos os usuários customizados (incluindo defaults editados)
+    localStorage.setItem('rc9_users', JSON.stringify(USERS));
+  } catch(e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
 
 // Lista de todas as abas (para gerenciamento de permissões)
 const ALL_TABS = [
@@ -4064,6 +4101,144 @@ function togglePwd(){
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
+// === GERENCIAMENTO DE USUÁRIOS ===
+
+function addNewUser(){
+  // Modal simples via prompts
+  const name = prompt('Primeiro nome do colaborador (ex: Maria):');
+  if (!name || !name.trim()) return;
+
+  const fullName = prompt('Nome completo (ex: Maria Silva Santos):', name.trim());
+  if (!fullName || !fullName.trim()) return;
+
+  const loginSugg = name.trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+  let login = prompt(`Login (sem espaços, só letras/números). Sugestão: "${loginSugg}"`, loginSugg);
+  if (!login) return;
+  login = login.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!login) {
+    alert('Login inválido.');
+    return;
+  }
+
+  if (USERS[login]) {
+    alert(`Já existe um usuário com login "${login}". Escolha outro.`);
+    return;
+  }
+
+  const pwd = prompt('Senha (mínimo 4 caracteres):');
+  if (!pwd || pwd.length < 4) {
+    alert('Senha precisa ter pelo menos 4 caracteres.');
+    return;
+  }
+
+  const email = prompt('E-mail (opcional, pode deixar em branco):', '') || '';
+
+  const role = confirm('Este usuário será ADMIN?\n\nOK = admin (vê tudo + gerencia acessos)\nCancelar = usuário comum (vê só o que você liberar)') ? 'admin' : 'user';
+
+  // Criar usuário
+  USERS[login] = {
+    name: name.trim(),
+    fullName: fullName.trim(),
+    email: email.trim(),
+    pwd: pwd,
+    role: role,
+    isDefault: false,
+    createdBy: currentUser.key,
+    createdAt: new Date().toISOString(),
+  };
+
+  // Permissões iniciais
+  if (role === 'admin') {
+    userPermissions[login] = ALL_TABS.map(t => t.id);
+  } else {
+    userPermissions[login] = ['visao', 'cidades', 'servicos', 'passageiros']; // padrão básico
+  }
+
+  saveUsers();
+  savePermissions();
+  alert(`Colaborador "${fullName.trim()}" criado com sucesso!\n\nLogin: ${login}\nSenha: ${pwd}\n\nLembre-se: anote essas credenciais para repassar à pessoa.`);
+  render();
+}
+
+function deleteUser(userKey){
+  const u = USERS[userKey];
+  if (!u) return;
+  if (u.isDefault) {
+    alert('Os usuários padrão (Thiago, Thales, Bruno) não podem ser excluídos. Você pode bloquear todos os acessos pelo botão "Bloquear tudo" se preferir.');
+    return;
+  }
+  if (!confirm(`Excluir o colaborador "${u.fullName}"?\n\nEle não conseguirá mais fazer login. Esta ação não pode ser desfeita pelos botões da tela.`)) return;
+  delete USERS[userKey];
+  delete userPermissions[userKey];
+  saveUsers();
+  savePermissions();
+  render();
+}
+
+function changeUserPassword(userKey){
+  const u = USERS[userKey];
+  if (!u) return;
+  const newPwd = prompt(`Nova senha para "${u.fullName}" (mínimo 4 caracteres):`);
+  if (!newPwd) return;
+  if (newPwd.length < 4) {
+    alert('Senha precisa ter pelo menos 4 caracteres.');
+    return;
+  }
+  USERS[userKey].pwd = newPwd;
+  saveUsers();
+  alert(`Senha de "${u.fullName}" alterada com sucesso!\n\nNova senha: ${newPwd}\n\nRepassar à pessoa.`);
+}
+
+function exportUsersAndPerms(){
+  const data = {
+    users: USERS,
+    permissions: userPermissions,
+    exportedAt: new Date().toISOString(),
+    exportedBy: currentUser.fullName,
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rc9-acessos-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importUsersAndPerms(){
+  if (!confirm('Importar arquivo de acessos vai SUBSTITUIR os usuários e permissões atuais. Continuar?')) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.users || !data.permissions) {
+          alert('Arquivo inválido. Faltam usuários ou permissões.');
+          return;
+        }
+        USERS = {...DEFAULT_USERS, ...data.users};
+        userPermissions = data.permissions;
+        saveUsers();
+        savePermissions();
+        alert('Acessos importados com sucesso!');
+        render();
+      } catch(err) {
+        alert('Erro ao ler arquivo: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
 // === GERENCIAMENTO DE PERMISSÕES (admin) ===
 
 function togglePerm(userKey, tabId){
@@ -4091,41 +4266,76 @@ function renderGerenciarAcessos(){
     return '<div style="padding:40px;text-align:center;color:var(--ink-5)">Acesso restrito</div>';
   }
 
-  // Listar usuários não-admin
-  const users = Object.keys(USERS).filter(k => USERS[k].role !== 'admin');
+  // Listar TODOS os usuários (admin inclusive, mas o admin tem aviso especial)
+  const users = Object.keys(USERS);
+  const totalUsers = users.length;
+  const userCount = users.filter(k => USERS[k].role === 'user').length;
+  const adminCount = users.filter(k => USERS[k].role === 'admin').length;
 
   return `
     ${pageHeader(
       'Administração',
       'Gerenciar <em>acessos</em>',
-      'Defina o que cada usuário pode ver. Marque as abas que cada pessoa terá permissão de acessar.'
+      `${totalUsers} ${plural(totalUsers,'colaborador cadastrado','colaboradores cadastrados')} · ${adminCount} ${plural(adminCount,'admin','admins')} · ${userCount} ${plural(userCount,'usuário','usuários')} comum${userCount !== 1 ? 's' : ''}`
     )}
     ${activeBanner('')}
+
+    <!-- Barra de ações -->
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+      <button onclick="addNewUser()" style="font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:var(--ink);border:none;border-radius:8px;padding:10px 18px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all var(--t-fast)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar colaborador
+      </button>
+      <button onclick="exportUsersAndPerms()" class="filter-clear" style="font-size:12px;display:flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar acessos
+      </button>
+      <button onclick="importUsersAndPerms()" class="filter-clear" style="font-size:12px;display:flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importar acessos
+      </button>
+    </div>
 
     <div class="access-grid">
       ${users.map(uk => {
         const u = USERS[uk];
-        const perms = userPermissions[uk] || [];
+        const isMe = uk === currentUser.key;
+        const isAdmin = u.role === 'admin';
+        const perms = isAdmin ? ALL_TABS.map(t => t.id) : (userPermissions[uk] || []);
         const initials = u.name.charAt(0).toUpperCase();
         return `
-          <div class="access-user-card">
+          <div class="access-user-card" ${isAdmin ? 'style="border-color:var(--brand-soft);background:linear-gradient(180deg,var(--brand-mute) 0%,var(--surface) 35%)"' : ''}>
             <div class="access-user-h">
-              <div class="user-avatar" style="width:36px;height:36px;font-size:14px">${initials}</div>
-              <div>
-                <div class="access-user-name">${u.fullName}</div>
-                <div class="user-role">Usuário · login: ${uk}</div>
+              <div class="user-avatar" style="width:38px;height:38px;font-size:14px;${isAdmin ? 'background:var(--brand)' : ''}">${initials}</div>
+              <div style="flex:1;min-width:0">
+                <div class="access-user-name">${u.fullName}${isMe ? ' <span style="color:var(--ink-5);font-weight:400;font-size:11px">(você)</span>' : ''}</div>
+                <div class="user-role ${isAdmin ? 'admin' : ''}">${isAdmin ? '★ Admin' : 'Usuário'} · login: <strong>${uk}</strong>${u.email ? ' · ' + u.email : ''}</div>
               </div>
-              <div class="access-user-stats">${perms.length} de ${ALL_TABS.length} abas</div>
+              <div style="display:flex;gap:4px;align-items:center">
+                <button onclick="changeUserPassword('${uk}')" title="Alterar senha" style="background:none;border:1px solid var(--ink-7);border-radius:6px;padding:5px 7px;cursor:pointer;color:var(--ink-4);transition:all var(--t-fast)" onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--ink)'" onmouseout="this.style.background='none';this.style.color='var(--ink-4)'">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </button>
+                ${!u.isDefault && !isMe ? `
+                  <button onclick="deleteUser('${uk}')" title="Excluir colaborador" style="background:none;border:1px solid var(--ink-7);border-radius:6px;padding:5px 7px;cursor:pointer;color:var(--ink-4);transition:all var(--t-fast)" onmouseover="this.style.background='var(--neg-mute)';this.style.borderColor='var(--neg)';this.style.color='var(--neg)'" onmouseout="this.style.background='none';this.style.borderColor='var(--ink-7)';this.style.color='var(--ink-4)'">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                ` : ''}
+              </div>
             </div>
 
-            ${(() => {
-              // Agrupar por seção
+            ${isAdmin ? `
+              <div style="background:var(--brand-mute);border:1px dashed var(--brand-soft);border-radius:8px;padding:14px;text-align:center;margin:6px 0">
+                <div style="font-size:24px;color:var(--brand-deep);font-weight:700;letter-spacing:-0.02em">★</div>
+                <div style="font-size:13px;color:var(--brand-deep);font-weight:600;margin-top:4px">Acesso total</div>
+                <div style="font-size:11px;color:var(--ink-4);margin-top:2px">Administradores veem todas as abas e gerenciam acessos.</div>
+              </div>
+            ` : (() => {
               const sections = {};
               ALL_TABS.forEach(t => {
                 if (!sections[t.section]) sections[t.section] = [];
                 sections[t.section].push(t);
               });
-              return Object.entries(sections).map(([sec, tabs]) => `
+              return `<div style="margin-bottom:8px;font-size:11px;color:var(--ink-5);display:flex;justify-content:space-between"><span>Permissões</span><strong>${perms.length} de ${ALL_TABS.length}</strong></div>` + Object.entries(sections).map(([sec, tabs]) => `
                 <div class="access-perm-section">${sec}</div>
                 ${tabs.map(t => `
                   <div class="access-perm" onclick="togglePerm('${uk}', '${t.id}')">
@@ -4136,20 +4346,24 @@ function renderGerenciarAcessos(){
               `).join('');
             })()}
 
-            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--ink-8);display:flex;gap:8px">
-              <button class="filter-clear" onclick="resetPerms('${uk}')" style="font-size:11px">Restaurar padrão</button>
-              <button class="filter-clear" onclick="userPermissions['${uk}']=ALL_TABS.map(t=>t.id);savePermissions();render()" style="font-size:11px">Liberar tudo</button>
-              <button class="filter-clear" onclick="userPermissions['${uk}']=[];savePermissions();render()" style="font-size:11px">Bloquear tudo</button>
-            </div>
+            ${!isAdmin ? `
+              <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--ink-8);display:flex;gap:6px;flex-wrap:wrap">
+                <button class="filter-clear" onclick="userPermissions['${uk}']=ALL_TABS.map(t=>t.id);savePermissions();render()" style="font-size:11px">✓ Liberar tudo</button>
+                <button class="filter-clear" onclick="userPermissions['${uk}']=[];savePermissions();render()" style="font-size:11px">✕ Bloquear tudo</button>
+                ${u.isDefault ? `<button class="filter-clear" onclick="resetPerms('${uk}')" style="font-size:11px">↺ Restaurar padrão</button>` : ''}
+              </div>
+            ` : ''}
           </div>
         `;
       }).join('')}
     </div>
 
     <div class="insight" style="margin-top:24px">
-      <div class="insight-label">Como isso funciona</div>
+      <div class="insight-label">Como funciona</div>
       <div class="insight-body">
-        Marque o toggle ao lado de cada aba para liberar ou bloquear o acesso ao usuário correspondente. As mudanças são salvas automaticamente e ficam ativas na próxima vez que o usuário fizer login. ${currentUser ? '<strong>Você (' + currentUser.name + ') é admin</strong> e tem acesso total — sua permissão não pode ser editada.' : ''}
+        <strong>Adicionar colaborador</strong> abre um assistente que pede nome, login, senha e perfil. Cada usuário criado fica salvo no <em>seu navegador</em>. Para repassar a senha, copie ela quando o sistema mostrar (ele exibe no fim do cadastro).<br><br>
+        <strong>Sincronização entre dispositivos:</strong> use os botões "Exportar acessos" para baixar um arquivo JSON com todos os usuários + permissões, e "Importar acessos" para carregar esse mesmo arquivo em outro dispositivo. Sem isso, os usuários criados aqui só funcionam neste computador/navegador.<br><br>
+        <strong>Usuários padrão</strong> (Thiago, Thales, Bruno) não podem ser excluídos, mas podem ter senha alterada e permissões ajustadas. <strong>Colaboradores criados por você</strong> podem ser excluídos pelo botão de lixeira.
       </div>
     </div>
   `;
@@ -4257,6 +4471,7 @@ function injectUserBadge(){
 // === BOOT GERAL ===
 
 function bootApp(){
+  loadUsers();
   loadPermissions();
   // Se sessão válida, vai direto pro dashboard
   if (checkSession()) {
