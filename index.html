@@ -9396,7 +9396,9 @@ function render99Visao() {
         ${cidadesOrdenadas.slice(0,5).map(c => {
           const pct = (c.valor / d.totalTarifa * 100);
           return `
-            <div style="margin-bottom:10px">
+            <div style="margin-bottom:10px;cursor:pointer;padding:4px;margin:6px -4px;border-radius:6px;transition:background var(--t-fast)" 
+                 onclick="open99CidadeModal('${c.cidade.replace(/'/g,"\\'")}')"
+                 onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
               <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
                 <span style="color:var(--ink)">${c.cidade}</span>
                 <span style="color:var(--ink-5)">${pct.toFixed(1)}% · ${fmtBRL(c.valor)}</span>
@@ -9428,7 +9430,9 @@ function render99Visao() {
         </thead>
         <tbody>
           ${top5.map((f, i) => `
-            <tr style="border-bottom:1px solid var(--line)">
+            <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                onclick="open99FuncionarioModal('${f.nome.replace(/'/g,"\\'")}')"
+                onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
               <td style="padding:10px 0;font-size:13px;color:var(--ink-5);font-weight:600">${i+1}</td>
               <td style="padding:10px 0;font-size:13px;color:var(--ink);font-weight:500">${f.nome}</td>
               <td style="padding:10px 0;font-size:12px;color:var(--ink-5)">${f.setor || '—'}</td>
@@ -9500,14 +9504,14 @@ function render99Cidades() {
   
   return pageHeader99('Cidades · 99', 'Distribuição geográfica das corridas na plataforma 99', kpis) + `
     <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px">
-      <table style="width:100%;border-collapse:collapse">
+      <table id="tbl99cidades" style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="border-bottom:1px solid var(--line)">
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Cidade</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Corridas</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Valor</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">% do total</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Ticket médio</th>
+            ${_99sortHeader('tbl99cidades', 0, 'Cidade', 'text', false)}
+            ${_99sortHeader('tbl99cidades', 1, 'Corridas', 'number', true)}
+            ${_99sortHeader('tbl99cidades', 2, 'Valor', 'number', true)}
+            ${_99sortHeader('tbl99cidades', 3, '% do total', 'number', true)}
+            ${_99sortHeader('tbl99cidades', 4, 'Ticket médio', 'number', true)}
           </tr>
         </thead>
         <tbody>
@@ -9515,11 +9519,13 @@ function render99Cidades() {
             const pct = (c.valor / d.totalTarifa * 100);
             const ticket = c.valor / c.qtd;
             return `
-              <tr style="border-bottom:1px solid var(--line)">
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                  onclick="open99CidadeModal('${c.cidade.replace(/'/g,"\\'")}')"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
                 <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${c.cidade}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(c.valor)}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right">
+                <td data-sort="${c.qtd}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
+                <td data-sort="${c.valor}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(c.valor)}</td>
+                <td data-sort="${pct}" style="padding:10px 8px;font-size:13px;text-align:right">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
                     <div style="width:60px;background:#f3f4f6;height:5px;border-radius:3px;overflow:hidden">
                       <div style="background:${C99.primary};height:100%;width:${pct}%"></div>
@@ -9527,7 +9533,7 @@ function render99Cidades() {
                     <span style="color:var(--ink);font-weight:600;min-width:44px">${pct.toFixed(1)}%</span>
                   </div>
                 </td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${fmtBRL(ticket)}</td>
+                <td data-sort="${ticket}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${fmtBRL(ticket)}</td>
               </tr>
             `;
           }).join('')}
@@ -9551,14 +9557,14 @@ function render99Servicos() {
   
   return pageHeader99('Serviços · 99', 'Distribuição por categoria de corrida', kpis) + `
     <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px">
-      <table style="width:100%;border-collapse:collapse">
+      <table id="tbl99servicos" style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="border-bottom:1px solid var(--line)">
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Categoria</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Corridas</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Valor</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">% do total</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Ticket médio</th>
+            ${_99sortHeader('tbl99servicos', 0, 'Categoria', 'text', false)}
+            ${_99sortHeader('tbl99servicos', 1, 'Corridas', 'number', true)}
+            ${_99sortHeader('tbl99servicos', 2, 'Valor', 'number', true)}
+            ${_99sortHeader('tbl99servicos', 3, '% do total', 'number', true)}
+            ${_99sortHeader('tbl99servicos', 4, 'Ticket médio', 'number', true)}
           </tr>
         </thead>
         <tbody>
@@ -9566,11 +9572,13 @@ function render99Servicos() {
             const pct = (c.valor / d.totalTarifa * 100);
             const ticket = c.valor / c.qtd;
             return `
-              <tr style="border-bottom:1px solid var(--line)">
-                <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${c.categoria}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(c.valor)}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right">
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                  onclick="open99ServicoModal('${c.categoria.replace(/'/g,"\\'")}')"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${_99tipoIcon(c.categoria)} ${c.categoria}</td>
+                <td data-sort="${c.qtd}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
+                <td data-sort="${c.valor}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(c.valor)}</td>
+                <td data-sort="${pct}" style="padding:10px 8px;font-size:13px;text-align:right">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
                     <div style="width:60px;background:#f3f4f6;height:5px;border-radius:3px;overflow:hidden">
                       <div style="background:${C99.primary};height:100%;width:${pct}%"></div>
@@ -9578,7 +9586,7 @@ function render99Servicos() {
                     <span style="color:var(--ink);font-weight:600;min-width:44px">${pct.toFixed(1)}%</span>
                   </div>
                 </td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${fmtBRL(ticket)}</td>
+                <td data-sort="${ticket}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${fmtBRL(ticket)}</td>
               </tr>
             `;
           }).join('')}
@@ -9608,26 +9616,28 @@ function render99Setores() {
       </div>
     </div>
     <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px">
-      <table style="width:100%;border-collapse:collapse">
+      <table id="tbl99setores" style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="border-bottom:1px solid var(--line)">
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Setor</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Pessoas</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Corridas</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Valor</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">% do total</th>
+            ${_99sortHeader('tbl99setores', 0, 'Setor', 'text', false)}
+            ${_99sortHeader('tbl99setores', 1, 'Pessoas', 'number', true)}
+            ${_99sortHeader('tbl99setores', 2, 'Corridas', 'number', true)}
+            ${_99sortHeader('tbl99setores', 3, 'Valor', 'number', true)}
+            ${_99sortHeader('tbl99setores', 4, '% do total', 'number', true)}
           </tr>
         </thead>
         <tbody>
           ${setores.map(s => {
             const pct = (s.valor / d.totalTarifa * 100);
             return `
-              <tr style="border-bottom:1px solid var(--line)">
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                  onclick="open99SetorModal('${s.setor.replace(/'/g,"\\'")}')"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
                 <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${s.setor}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${s.pessoas}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${s.qtd}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(s.valor)}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right">
+                <td data-sort="${s.pessoas}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${s.pessoas}</td>
+                <td data-sort="${s.qtd}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${s.qtd}</td>
+                <td data-sort="${s.valor}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(s.valor)}</td>
+                <td data-sort="${pct}" style="padding:10px 8px;font-size:13px;text-align:right">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
                     <div style="width:80px;background:#f3f4f6;height:5px;border-radius:3px;overflow:hidden">
                       <div style="background:${C99.primary};height:100%;width:${pct}%"></div>
@@ -9666,15 +9676,15 @@ function render99Passageiros() {
   
   return pageHeader99('Top consumidores · 99', 'Ranking de funcionários por gasto na plataforma', kpis) + `
     <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px">
-      <table style="width:100%;border-collapse:collapse">
+      <table id="tbl99passageiros" style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="border-bottom:1px solid var(--line)">
             <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">#</th>
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Funcionário</th>
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Setor</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Corridas</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Valor</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Ticket médio</th>
+            ${_99sortHeader('tbl99passageiros', 1, 'Funcionário', 'text', false)}
+            ${_99sortHeader('tbl99passageiros', 2, 'Setor', 'text', false)}
+            ${_99sortHeader('tbl99passageiros', 3, 'Corridas', 'number', true)}
+            ${_99sortHeader('tbl99passageiros', 4, 'Valor', 'number', true)}
+            ${_99sortHeader('tbl99passageiros', 5, 'Ticket médio', 'number', true)}
             <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Cidades</th>
           </tr>
         </thead>
@@ -9682,13 +9692,15 @@ function render99Passageiros() {
           ${funcs.map((f, i) => {
             const ticket = f.valor / f.qtd;
             return `
-              <tr style="border-bottom:1px solid var(--line)">
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                  onclick="open99FuncionarioModal('${f.nome.replace(/'/g,"\\'")}')"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
                 <td style="padding:10px 8px;font-size:13px;color:var(--ink-5);font-weight:600">${i+1}</td>
                 <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${f.nome}</td>
                 <td style="padding:10px 8px;font-size:12px;color:var(--ink-5)">${f.setor || '—'}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${f.qtd}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(f.valor)}</td>
-                <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${fmtBRL(ticket)}</td>
+                <td data-sort="${f.qtd}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${f.qtd}</td>
+                <td data-sort="${f.valor}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(f.valor)}</td>
+                <td data-sort="${ticket}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${fmtBRL(ticket)}</td>
                 <td style="padding:10px 8px;font-size:12px;color:var(--ink-5)">${(f.cidades||[]).join(', ')}</td>
               </tr>
             `;
@@ -9761,117 +9773,196 @@ function render99CadastradosVsUso() {
   const fmtBRL = (v) => 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
   
   const total = cad.totais.completos_total + cad.totais.incompletos;
-  const usaramPct = (cad.totais.completos_usaram / cad.totais.completos_total * 100).toFixed(1);
-  const ociososPct = (cad.totais.completos_nunca / cad.totais.completos_total * 100).toFixed(1);
+  
+  // Classificar todos os cadastrados em 4 grupos:
+  // Frequente: usou em 3-4 meses
+  // Esporádico: usou em 1-2 meses
+  // Nunca usou
+  // Incompleto
+  const todos = [];
+  
+  cad.completos_que_usaram.forEach(c => {
+    const mesesAtivos = (c.meses || []).length;
+    todos.push({
+      ...c,
+      status: mesesAtivos >= 3 ? 'frequente' : 'esporadico',
+      statusLabel: mesesAtivos >= 3 ? 'Frequente' : 'Esporádico',
+      mesesCount: mesesAtivos,
+    });
+  });
+  cad.completos_nunca_usaram.forEach(c => {
+    todos.push({
+      ...c,
+      status: 'nunca',
+      statusLabel: 'Nunca usou',
+      mesesCount: 0,
+    });
+  });
+  cad.incompletos.forEach(c => {
+    todos.push({
+      ...c,
+      status: 'incompleto',
+      statusLabel: 'Cadastro incompleto',
+      mesesCount: 0,
+    });
+  });
+  
+  const frequentes = todos.filter(c => c.status === 'frequente').length;
+  const esporadicos = todos.filter(c => c.status === 'esporadico').length;
+  const nunca = todos.filter(c => c.status === 'nunca').length;
+  const incompletos = todos.filter(c => c.status === 'incompleto').length;
   
   const kpis = [
-    {label: 'Cadastrados (lista oficial 99)', value: total},
-    {label: 'Usaram a 99 (Jan-Abr)', value: cad.totais.completos_usaram, sub: usaramPct + '%'},
-    {label: 'Nunca usaram', value: cad.totais.completos_nunca, sub: ociososPct + '%'},
-    {label: 'Cadastros incompletos', value: cad.totais.incompletos, sub: 'apelidos/genéricos'},
+    {label: 'Total cadastrados', value: total, sub: 'lista oficial 99'},
+    {label: 'Frequentes', value: frequentes, sub: 'usaram 3-4 meses'},
+    {label: 'Esporádicos', value: esporadicos, sub: 'usaram 1-2 meses'},
+    {label: 'Nunca usaram', value: nunca, sub: ((nunca/total)*100).toFixed(1) + '%'},
+    {label: 'Incompletos', value: incompletos, sub: 'apelidos/genéricos'},
   ];
   
-  return pageHeader99('Cadastro 99 vs uso real', 'Cruzamento da lista oficial de cadastrados com quem efetivamente usou', kpis) + `
+  return pageHeader99('Cadastro 99 vs uso real', 'Todos os cadastrados com status de uso e drill-down por funcionário', kpis) + `
     <!-- Comparação Uber vs 99 -->
     <div style="background:${C99.bg};border:1px solid ${C99.border};border-radius:12px;padding:16px 20px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;color:${C99.ink};margin-bottom:8px">⚠️ Comparação com a Uber</div>
       <div style="font-size:13px;color:var(--ink);line-height:1.6">
         <div style="margin:4px 0">🟦 <strong>Uber</strong>: 80 cadastrados, 26 ociosos = <strong>32,5%</strong></div>
-        <div style="margin:4px 0">🟨 <strong>99</strong>: ${cad.totais.completos_total} cadastrados, ${cad.totais.completos_nunca} ociosos = <strong style="color:#dc2626">${ociososPct}%</strong></div>
+        <div style="margin:4px 0">🟨 <strong>99</strong>: ${cad.totais.completos_total} cadastrados, ${cad.totais.completos_nunca} ociosos = <strong style="color:#dc2626">${((cad.totais.completos_nunca/cad.totais.completos_total)*100).toFixed(1)}%</strong></div>
         <div style="margin-top:8px;font-size:12px;color:var(--ink-5)">A 99 tem proporcionalmente quase o dobro de cadastros ociosos.</div>
       </div>
     </div>
     
-    <!-- Tabs -->
-    <div style="display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:0">
-      <button class="cad99-tab active" data-tab="usaram" onclick="set99CadTab('usaram')" 
+    <!-- Tabs de filtro -->
+    <div style="display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:0;flex-wrap:wrap">
+      <button class="cad99-tab active" data-tab="todos" onclick="set99CadTab('todos')" 
               style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink);border-bottom:2px solid var(--ink);cursor:pointer;font-weight:500">
-        ✓ Usaram (${cad.totais.completos_usaram})
+        Todos (${total})
+      </button>
+      <button class="cad99-tab" data-tab="frequente" onclick="set99CadTab('frequente')"
+              style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
+        🟢 Frequentes (${frequentes})
+      </button>
+      <button class="cad99-tab" data-tab="esporadico" onclick="set99CadTab('esporadico')"
+              style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
+        🟡 Esporádicos (${esporadicos})
       </button>
       <button class="cad99-tab" data-tab="nunca" onclick="set99CadTab('nunca')"
               style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
-        ✗ Nunca usaram (${cad.totais.completos_nunca})
+        🔴 Nunca usaram (${nunca})
       </button>
-      <button class="cad99-tab" data-tab="incompletos" onclick="set99CadTab('incompletos')"
+      <button class="cad99-tab" data-tab="incompleto" onclick="set99CadTab('incompleto')"
               style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
-        ⚠ Incompletos (${cad.totais.incompletos})
+        ⚪ Incompletos (${incompletos})
       </button>
     </div>
     
     <div id="cad99-content" style="background:white;border:1px solid var(--line);border-top:none;border-radius:0 0 12px 12px;padding:20px">
-      ${render99CadTab('usaram')}
+      ${render99CadTab('todos')}
     </div>
   `;
+}
+
+// Helper: badge de status com cor
+function _99statusBadge(status, label) {
+  const cores = {
+    frequente: { bg: '#dcfce7', fg: '#166534', dot: '#16a34a' },
+    esporadico: { bg: '#fef3c7', fg: '#92400e', dot: '#d97706' },
+    nunca: { bg: '#fee2e2', fg: '#991b1b', dot: '#dc2626' },
+    incompleto: { bg: '#f3f4f6', fg: '#475569', dot: '#94a3b8' },
+  };
+  const c = cores[status] || cores.incompleto;
+  return `<span style="display:inline-flex;align-items:center;gap:5px;background:${c.bg};color:${c.fg};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap">
+    <span style="width:6px;height:6px;background:${c.dot};border-radius:50%"></span>${label}
+  </span>`;
 }
 
 function render99CadTab(tab) {
   const d = D99();
   const cad = d.cadastrados;
   const fmtBRL = (v) => 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const MESES_LBL = {Janeiro:'Jan', Fevereiro:'Fev', Marco:'Mar', Abril:'Abr'};
   
-  if (tab === 'usaram') {
-    return `<table style="width:100%;border-collapse:collapse">
-      <thead>
-        <tr style="border-bottom:1px solid var(--line)">
-          <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">#</th>
-          <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Nome</th>
-          <th style="text-align:right;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Corridas</th>
-          <th style="text-align:right;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Valor</th>
-          <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Meses ativos</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${cad.completos_que_usaram.map((c, i) => `
+  // Construir lista unificada
+  const todos = [];
+  cad.completos_que_usaram.forEach(c => {
+    const mesesAtivos = (c.meses || []).length;
+    todos.push({
+      ...c,
+      status: mesesAtivos >= 3 ? 'frequente' : 'esporadico',
+      statusLabel: mesesAtivos >= 3 ? 'Frequente' : 'Esporádico',
+      mesesCount: mesesAtivos,
+    });
+  });
+  cad.completos_nunca_usaram.forEach(c => {
+    todos.push({
+      ...c, status: 'nunca', statusLabel: 'Nunca usou', mesesCount: 0
+    });
+  });
+  cad.incompletos.forEach(c => {
+    todos.push({
+      ...c, status: 'incompleto', statusLabel: 'Incompleto', mesesCount: 0
+    });
+  });
+  
+  // Filtrar por tab
+  let lista;
+  if (tab === 'todos') lista = todos;
+  else lista = todos.filter(c => c.status === tab);
+  
+  // Ordenar: frequentes primeiro (por valor), depois esporádicos, depois nunca, depois incompletos
+  const ordemStatus = {frequente: 0, esporadico: 1, nunca: 2, incompleto: 3};
+  lista.sort((a, b) => {
+    if (ordemStatus[a.status] !== ordemStatus[b.status]) {
+      return ordemStatus[a.status] - ordemStatus[b.status];
+    }
+    return (b.valor || 0) - (a.valor || 0);
+  });
+  
+  // Tabela com tags + drill-down
+  const tableId = 'tbl99cad-' + tab;
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--ink-5)">
+        ${lista.length} ${lista.length === 1 ? 'pessoa' : 'pessoas'} 
+        ${tab === 'todos' ? '· clique no nome para drill-down · use as setas para ordenar' : ''}
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="${tableId}" style="width:100%;border-collapse:collapse;min-width:780px">
+        <thead>
           <tr style="border-bottom:1px solid var(--line)">
-            <td style="padding:8px;font-size:12px;color:var(--ink-5)">${i+1}</td>
-            <td style="padding:8px;font-size:13px;color:var(--ink);font-weight:500">${c.nome}</td>
-            <td style="padding:8px;font-size:13px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
-            <td style="padding:8px;font-size:13px;text-align:right;color:var(--ink);font-weight:600">${fmtBRL(c.valor)}</td>
-            <td style="padding:8px;font-size:11px;color:var(--ink-5)">${(c.meses||[]).map(m=>m.slice(0,3)).join(' · ')}</td>
+            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;width:30px">#</th>
+            ${_99sortHeader(tableId, 1, 'Nome', 'text', false)}
+            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Status</th>
+            ${_99sortHeader(tableId, 3, 'Corridas', 'number', true)}
+            ${_99sortHeader(tableId, 4, 'Valor', 'number', true)}
+            ${_99sortHeader(tableId, 5, 'Meses ativos', 'number', true)}
+            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Período</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;width:40px"></th>
           </tr>
-        `).join('')}
-      </tbody>
-    </table>`;
-  }
-  
-  if (tab === 'nunca') {
-    return `<table style="width:100%;border-collapse:collapse">
-      <thead>
-        <tr style="border-bottom:1px solid var(--line)">
-          <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">#</th>
-          <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Nome</th>
-          <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Telefone(s)</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${cad.completos_nunca_usaram.map((c, i) => `
-          <tr style="border-bottom:1px solid var(--line)">
-            <td style="padding:8px;font-size:12px;color:var(--ink-5)">${i+1}</td>
-            <td style="padding:8px;font-size:13px;color:var(--ink)">${c.nome}</td>
-            <td style="padding:8px;font-size:11px;color:var(--ink-5);font-family:monospace">${(c.telefones||[]).join(', ') || '—'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>`;
-  }
-  
-  // incompletos
-  return `<table style="width:100%;border-collapse:collapse">
-    <thead>
-      <tr style="border-bottom:1px solid var(--line)">
-        <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">#</th>
-        <th style="text-align:left;padding:8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Nome</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${cad.incompletos.map((c, i) => `
-        <tr style="border-bottom:1px solid var(--line)">
-          <td style="padding:8px;font-size:12px;color:var(--ink-5)">${i+1}</td>
-          <td style="padding:8px;font-size:13px;color:var(--ink)">${c.nome}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>`;
+        </thead>
+        <tbody>
+          ${lista.map((c, i) => {
+            const isClickable = c.status !== 'incompleto' && (c.qtd > 0);
+            const meses = (c.meses || []).map(m => MESES_LBL[m] || m).join(' · ');
+            return `
+              <tr style="border-bottom:1px solid var(--line);${isClickable ? 'cursor:pointer;' : ''}transition:background var(--t-fast)" 
+                  ${isClickable ? `onclick="open99FuncionarioModal('${(c.nome||'').replace(/'/g,"\\'")}')"` : ''}
+                  ${isClickable ? `onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''"` : ''}>
+                <td style="padding:10px 8px;font-size:12px;color:var(--ink-5);font-weight:600">${i+1}</td>
+                <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${c.nome || '—'}</td>
+                <td style="padding:10px 8px">${_99statusBadge(c.status, c.statusLabel)}</td>
+                <td data-sort="${c.qtd || 0}" style="padding:10px 8px;font-size:13px;text-align:right;color:${(c.qtd||0) > 0 ? 'var(--ink)' : 'var(--ink-5)'};font-weight:${(c.qtd||0) > 0 ? '600' : '400'}">${(c.qtd||0) || '—'}</td>
+                <td data-sort="${c.valor || 0}" style="padding:10px 8px;font-size:13px;text-align:right;color:${(c.valor||0) > 0 ? 'var(--ink)' : 'var(--ink-5)'};font-weight:${(c.valor||0) > 0 ? '600' : '400'}">${(c.valor||0) > 0 ? fmtBRL(c.valor) : '—'}</td>
+                <td data-sort="${c.mesesCount}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${c.mesesCount > 0 ? c.mesesCount + '/4' : '—'}</td>
+                <td style="padding:10px 8px;font-size:11px;color:var(--ink-5)">${meses || '—'}</td>
+                <td style="padding:10px 8px;text-align:center">${isClickable ? '<span style="color:var(--ink-5);font-size:14px">→</span>' : ''}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function set99CadTab(tab) {
@@ -10380,6 +10471,764 @@ function renderCmpTop() {
       }).join('')}
     </div>
   `;
+}
+
+
+/* ============================================================================
+   PART 13 — INTERATIVIDADE 99 (modais, drill-downs, ordenação)
+   Replica todas as funcionalidades clicáveis da Uber para a 99
+   ============================================================================ */
+
+/* ============================================================================
+   HELPERS DE FORMATAÇÃO E COR
+   ============================================================================ */
+function _99fmt(v) {
+  return 'R$ ' + Number(v||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function _99tipoIcon(servico) {
+  // Devolve ícone+cor para a categoria 99
+  const map = {
+    'Pop': '🚗',
+    'Comfort': '✨',
+    'Top': '⭐',
+    'Black': '⚫',
+    'Entrega Moto': '🛵',
+    'Moto': '🏍️',
+    'Premium': '💎'
+  };
+  return map[servico] || '🚙';
+}
+
+/* ============================================================================
+   FILTRA TRANSAÇÕES 99 POR CONTEXTO
+   Aplica os filtros globais (mes/cidade/categoria/funcionario) sobre as
+   350 transações da 99
+   ============================================================================ */
+function _99filterTxs() {
+  const all = (D99().transacoes || []);
+  return all.filter(t => {
+    if (filters.mes && t.mes !== filters.mes) return false;
+    if (filters.cidade && t.cidade !== filters.cidade) return false;
+    if (filters.servico && t.categoria !== filters.servico) return false;
+    if (filters.passageiro && t.passageiro !== filters.passageiro) return false;
+    if (filters.valorMin && t.valor < parseFloat(filters.valorMin)) return false;
+    if (filters.valorMax && t.valor > parseFloat(filters.valorMax)) return false;
+    return true;
+  });
+}
+
+/* ============================================================================
+   MODAL CIDADE 99
+   ============================================================================ */
+function open99CidadeModal(cidade) {
+  const fmt = _99fmt;
+  const allTxs = (D99().transacoes || []).filter(t => t.cidade === cidade);
+  const total = allTxs.reduce((s,t)=>s+t.valor,0);
+  const qtd = allTxs.length;
+  const ticket = qtd ? total/qtd : 0;
+  const pctEmpresa = (total / (D99().totalTarifa || 1)) * 100;
+  
+  // Por mês
+  const porMes = {Janeiro:{valor:0,qtd:0}, Fevereiro:{valor:0,qtd:0}, Marco:{valor:0,qtd:0}, Abril:{valor:0,qtd:0}};
+  allTxs.forEach(t => {
+    if (porMes[t.mes]) {
+      porMes[t.mes].valor += t.valor;
+      porMes[t.mes].qtd++;
+    }
+  });
+  const maxMes = Math.max(...Object.values(porMes).map(m=>m.valor), 1);
+  
+  // Por passageiro
+  const passMap = new Map();
+  allTxs.forEach(t => {
+    if (!passMap.has(t.passageiro)) passMap.set(t.passageiro, {valor:0, qtd:0, setor: t.setor});
+    const p = passMap.get(t.passageiro);
+    p.valor += t.valor; p.qtd++;
+  });
+  const topPass = [...passMap.entries()]
+    .map(([n,d]) => ({nome:n, ...d}))
+    .sort((a,b)=>b.valor-a.valor).slice(0,8);
+  
+  // Por categoria/serviço
+  const servMap = new Map();
+  allTxs.forEach(t => {
+    if (!servMap.has(t.categoria)) servMap.set(t.categoria, {valor:0, qtd:0});
+    const s = servMap.get(t.categoria);
+    s.valor += t.valor; s.qtd++;
+  });
+  const topServ = [...servMap.entries()]
+    .map(([s,d]) => ({servico:s, ...d}))
+    .sort((a,b)=>b.valor-a.valor);
+  
+  // Por setor
+  const setorMap = new Map();
+  allTxs.forEach(t => {
+    if (!setorMap.has(t.setor)) setorMap.set(t.setor, {valor:0, qtd:0});
+    const s = setorMap.get(t.setor);
+    s.valor += t.valor; s.qtd++;
+  });
+  const topSetor = [...setorMap.entries()].map(([s,d])=>({setor:s,...d})).sort((a,b)=>b.valor-a.valor);
+  
+  // Maior corrida
+  const maior = [...allTxs].sort((a,b)=>b.valor-a.valor)[0];
+  
+  document.getElementById('modal-cidade-title').textContent = cidade;
+  document.getElementById('modal-cidade-meta').textContent =
+    `99 Corporativo · ${fmt(total)} · ${qtd} corridas · ${pctEmpresa.toFixed(1)}% do total da 99 · ticket médio ${fmt(ticket)}`;
+  
+  document.getElementById('modal-cidade-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Funcionários</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${passMap.size}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Categorias</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${topServ.length}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Maior corrida</div>
+        <div style="font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${maior ? fmt(maior.valor) : '—'}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Setores</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${topSetor.length}</div>
+      </div>
+    </div>
+
+    <!-- Evolução mensal -->
+    <div class="panel" style="margin:0 0 16px">
+      <div class="panel-h"><h3 style="font-size:13px">Evolução mensal em ${cidade}</h3><span class="meta">JAN – ABR 2026</span></div>
+      <div class="panel-body">
+        <div style="display:flex;align-items:flex-end;justify-content:space-around;height:140px;gap:12px;padding:10px 8px">
+          ${MESES_ORDER.map(m => {
+            const dm = porMes[m] || {valor:0,qtd:0};
+            const h = dm.valor === 0 ? 0 : (dm.valor/maxMes*100);
+            return `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="font-size:10px;color:var(--ink);font-weight:600">${dm.valor === 0 ? '—' : fmt(dm.valor)}</div>
+                <div style="width:100%;background:${dm.valor === 0 ? '#f3f4f6' : C99.primary};height:${Math.max(h,2)}%;border-radius:var(--r-sm) var(--r-sm) 0 0;min-height:4px"></div>
+                <div style="font-size:11px;color:var(--ink-5)">${m.substring(0,3)}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <!-- Top funcionários -->
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Top funcionários em ${cidade}</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid var(--line)">
+                <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Funcionário</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Corridas</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topPass.map(p => `
+                <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                    onclick="closeCidadeModal();setTimeout(()=>open99FuncionarioModal('${p.nome.replace(/'/g,"\\'").replace(/"/g,'&quot;')}'), 250)"
+                    onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                  <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${p.nome}</td>
+                  <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${p.qtd}</td>
+                  <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(p.valor)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Top categorias -->
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Categorias em ${cidade}</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid var(--line)">
+                <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Categoria</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Qtd</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topServ.map(s => `
+                <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                    onclick="closeCidadeModal();setTimeout(()=>open99ServicoModal('${s.servico.replace(/'/g,"\\'")}'), 250)"
+                    onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                  <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${_99tipoIcon(s.servico)} ${s.servico}</td>
+                  <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${s.qtd}</td>
+                  <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(s.valor)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Setores em ${cidade} -->
+    <div class="panel" style="margin:0 0 14px">
+      <div class="panel-h"><h3 style="font-size:13px">Setores ativos em ${cidade}</h3></div>
+      <div class="panel-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Setor</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Corridas</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">%</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${topSetor.map(s => `
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer" 
+                  onclick="closeCidadeModal();setTimeout(()=>open99SetorModal('${s.setor.replace(/'/g,"\\'")}'), 250)"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${s.setor}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${s.qtd}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(s.valor)}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${(s.valor/total*100).toFixed(1)}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="closeCidadeModal();setFilter('cidade', '${cidade.replace(/'/g,"\\'")}')" 
+              style="flex:1;background:${C99.primary};color:${C99.ink};border:none;border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">
+        Aplicar filtro · Ver só ${cidade}
+      </button>
+      <button onclick="closeCidadeModal()" 
+              style="flex:0 0 120px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">
+        Fechar
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('modal-cidade').classList.add('show');
+}
+
+/* ============================================================================
+   MODAL CATEGORIA / SERVIÇO 99
+   ============================================================================ */
+function open99ServicoModal(categoria) {
+  const fmt = _99fmt;
+  const allTxs = (D99().transacoes || []).filter(t => t.categoria === categoria);
+  const total = allTxs.reduce((s,t)=>s+t.valor,0);
+  const qtd = allTxs.length;
+  const ticket = qtd ? total/qtd : 0;
+  const pctEmpresa = (total / (D99().totalTarifa || 1)) * 100;
+  
+  // Por mês
+  const porMes = {Janeiro:{valor:0,qtd:0}, Fevereiro:{valor:0,qtd:0}, Marco:{valor:0,qtd:0}, Abril:{valor:0,qtd:0}};
+  allTxs.forEach(t => {
+    if (porMes[t.mes]) {
+      porMes[t.mes].valor += t.valor;
+      porMes[t.mes].qtd++;
+    }
+  });
+  const maxMes = Math.max(...Object.values(porMes).map(m=>m.valor), 1);
+  
+  // Por funcionario
+  const passMap = new Map();
+  allTxs.forEach(t => {
+    if (!passMap.has(t.passageiro)) passMap.set(t.passageiro, {valor:0, qtd:0});
+    const p = passMap.get(t.passageiro);
+    p.valor += t.valor; p.qtd++;
+  });
+  const topPass = [...passMap.entries()].map(([n,d])=>({nome:n,...d})).sort((a,b)=>b.valor-a.valor).slice(0,8);
+  
+  // Por cidade
+  const cidMap = new Map();
+  allTxs.forEach(t => {
+    if (!cidMap.has(t.cidade)) cidMap.set(t.cidade, {valor:0, qtd:0});
+    const c = cidMap.get(t.cidade);
+    c.valor += t.valor; c.qtd++;
+  });
+  const topCid = [...cidMap.entries()].map(([c,d])=>({cidade:c,...d})).sort((a,b)=>b.valor-a.valor);
+  
+  const sorted = [...allTxs].sort((a,b)=>b.valor-a.valor);
+  const maior = sorted[0];
+  const menor = sorted[sorted.length-1];
+  
+  document.getElementById('modal-servico-title').textContent = `${_99tipoIcon(categoria)} ${categoria}`;
+  document.getElementById('modal-servico-meta').textContent =
+    `99 Corporativo · ${fmt(total)} · ${qtd} corridas · ${pctEmpresa.toFixed(1)}% do total · ticket médio ${fmt(ticket)}`;
+  
+  document.getElementById('modal-servico-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Corridas</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${qtd}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Funcionários</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${passMap.size}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Maior corrida</div>
+        <div style="font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${maior ? fmt(maior.valor) : '—'}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Menor corrida</div>
+        <div style="font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${menor ? fmt(menor.valor) : '—'}</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin:0 0 16px">
+      <div class="panel-h"><h3 style="font-size:13px">Evolução mensal · ${categoria}</h3></div>
+      <div class="panel-body">
+        <div style="display:flex;align-items:flex-end;justify-content:space-around;height:120px;gap:12px;padding:10px 8px">
+          ${MESES_ORDER.map(m => {
+            const dm = porMes[m] || {valor:0,qtd:0};
+            const h = dm.valor === 0 ? 0 : (dm.valor/maxMes*100);
+            return `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="font-size:10px;color:var(--ink);font-weight:600">${dm.valor === 0 ? '—' : fmt(dm.valor)}</div>
+                <div style="width:100%;background:${dm.valor === 0 ? '#f3f4f6' : C99.primary};height:${Math.max(h,2)}%;border-radius:var(--r-sm) var(--r-sm) 0 0;min-height:4px"></div>
+                <div style="font-size:11px;color:var(--ink-5)">${m.substring(0,3)}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Top funcionários · ${categoria}</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Funcionário</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Qtd</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+            </tr></thead>
+            <tbody>${topPass.map(p => `
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer" 
+                  onclick="closeServicoModal();setTimeout(()=>open99FuncionarioModal('${p.nome.replace(/'/g,"\\'")}'), 250)"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${p.nome}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${p.qtd}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(p.valor)}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Cidades · ${categoria}</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Cidade</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Qtd</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+            </tr></thead>
+            <tbody>${topCid.map(c => `
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer" 
+                  onclick="closeServicoModal();setTimeout(()=>open99CidadeModal('${c.cidade.replace(/'/g,"\\'")}'), 250)"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${c.cidade}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(c.valor)}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="closeServicoModal();setFilter('servico', '${categoria.replace(/'/g,"\\'")}')" 
+              style="flex:1;background:${C99.primary};color:${C99.ink};border:none;border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">
+        Aplicar filtro · Ver só ${categoria}
+      </button>
+      <button onclick="closeServicoModal()" 
+              style="flex:0 0 120px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">
+        Fechar
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('modal-servico').classList.add('show');
+}
+
+/* ============================================================================
+   MODAL FUNCIONÁRIO 99
+   Reusa o modal genérico (id="modal")
+   ============================================================================ */
+function open99FuncionarioModal(nome) {
+  const fmt = _99fmt;
+  // Match case-insensitive e tolerante a acentos
+  const norm = (s) => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const nomeNorm = norm(nome);
+  const allTxs = (D99().transacoes || []).filter(t => norm(t.passageiro) === nomeNorm);
+  
+  if (!allTxs.length) {
+    // Talvez seja alguém que está cadastrado mas nunca usou: avisa e abre só com nome
+    document.getElementById('modal-eyebrow').textContent = 'FUNCIONÁRIO · 99';
+    document.getElementById('modal-title').textContent = nome;
+    document.getElementById('modal-meta').textContent = 'Sem corridas registradas na 99 entre Jan-Abr 2026';
+    document.getElementById('modal-body').innerHTML = `
+      <div style="background:${C99.bg};border:1px solid ${C99.border};padding:16px 18px;border-radius:var(--r-md);color:var(--ink);font-size:13px">
+        Este funcionário <strong>está cadastrado</strong> na 99 Corporativo mas <strong>não pediu nenhuma corrida</strong> no período analisado.
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <button onclick="closeModal()" style="flex:1;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">Fechar</button>
+      </div>
+    `;
+    document.getElementById('modal').classList.add('show');
+    return;
+  }
+  
+  const total = allTxs.reduce((s,t)=>s+t.valor,0);
+  const qtd = allTxs.length;
+  const ticket = total/qtd;
+  const setor = allTxs[0].setor || '—';
+  const email = allTxs[0].email || '';
+  
+  // Por mês
+  const porMes = {Janeiro:{valor:0,qtd:0}, Fevereiro:{valor:0,qtd:0}, Marco:{valor:0,qtd:0}, Abril:{valor:0,qtd:0}};
+  allTxs.forEach(t => {
+    if (porMes[t.mes]) { porMes[t.mes].valor += t.valor; porMes[t.mes].qtd++; }
+  });
+  const maxMes = Math.max(...Object.values(porMes).map(m=>m.valor), 1);
+  
+  // Por cidade
+  const cidMap = new Map();
+  allTxs.forEach(t => {
+    if (!cidMap.has(t.cidade)) cidMap.set(t.cidade, {valor:0,qtd:0});
+    const c = cidMap.get(t.cidade); c.valor += t.valor; c.qtd++;
+  });
+  const cidades = [...cidMap.entries()].map(([c,d])=>({cidade:c,...d})).sort((a,b)=>b.valor-a.valor);
+  
+  // Por categoria
+  const catMap = new Map();
+  allTxs.forEach(t => {
+    if (!catMap.has(t.categoria)) catMap.set(t.categoria, {valor:0,qtd:0});
+    const c = catMap.get(t.categoria); c.valor += t.valor; c.qtd++;
+  });
+  const cats = [...catMap.entries()].map(([c,d])=>({cat:c,...d})).sort((a,b)=>b.valor-a.valor);
+  
+  // Maior e menor
+  const sorted = [...allTxs].sort((a,b)=>b.valor-a.valor);
+  const maior = sorted[0];
+  const menor = sorted[sorted.length-1];
+  
+  document.getElementById('modal-eyebrow').textContent = 'FUNCIONÁRIO · 99';
+  document.getElementById('modal-title').textContent = nome;
+  document.getElementById('modal-meta').textContent =
+    `${setor} · ${email} · ${fmt(total)} · ${qtd} corridas · ticket ${fmt(ticket)}`;
+  
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Total</div>
+        <div style="font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${fmt(total)}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Corridas</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${qtd}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Maior</div>
+        <div style="font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${fmt(maior.valor)}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Menor</div>
+        <div style="font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${fmt(menor.valor)}</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin:0 0 16px">
+      <div class="panel-h"><h3 style="font-size:13px">Evolução mensal de ${nome.split(' ')[0]}</h3></div>
+      <div class="panel-body">
+        <div style="display:flex;align-items:flex-end;justify-content:space-around;height:120px;gap:12px;padding:10px 8px">
+          ${MESES_ORDER.map(m => {
+            const dm = porMes[m] || {valor:0,qtd:0};
+            const h = dm.valor === 0 ? 0 : (dm.valor/maxMes*100);
+            return `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="font-size:10px;color:var(--ink);font-weight:600">${dm.valor === 0 ? '—' : fmt(dm.valor)}</div>
+                <div style="width:100%;background:${dm.valor === 0 ? '#f3f4f6' : C99.primary};height:${Math.max(h,2)}%;border-radius:var(--r-sm) var(--r-sm) 0 0;min-height:4px"></div>
+                <div style="font-size:11px;color:var(--ink-5)">${m.substring(0,3)}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Cidades</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Cidade</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Qtd</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+            </tr></thead>
+            <tbody>${cidades.map(c => `
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer" 
+                  onclick="closeModal();setTimeout(()=>open99CidadeModal('${c.cidade.replace(/'/g,"\\'")}'), 250)"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${c.cidade}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(c.valor)}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Categorias usadas</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Categoria</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Qtd</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+            </tr></thead>
+            <tbody>${cats.map(c => `
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer" 
+                  onclick="closeModal();setTimeout(()=>open99ServicoModal('${c.cat.replace(/'/g,"\\'")}'), 250)"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${_99tipoIcon(c.cat)} ${c.cat}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(c.valor)}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="closeModal();setFilter('passageiro', '${nome.replace(/'/g,"\\'")}')" 
+              style="flex:1;background:${C99.primary};color:${C99.ink};border:none;border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">
+        Aplicar filtro · Ver só ${nome.split(' ')[0]}
+      </button>
+      <button onclick="closeModal()" 
+              style="flex:0 0 120px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">
+        Fechar
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('show');
+}
+
+/* ============================================================================
+   MODAL SETOR (EXCLUSIVO 99)
+   Usa o modal genérico (id="modal")
+   ============================================================================ */
+function open99SetorModal(setor) {
+  const fmt = _99fmt;
+  const allTxs = (D99().transacoes || []).filter(t => t.setor === setor);
+  const total = allTxs.reduce((s,t)=>s+t.valor,0);
+  const qtd = allTxs.length;
+  const pctEmpresa = (total / (D99().totalTarifa || 1)) * 100;
+  
+  // Por mês
+  const porMes = {Janeiro:{valor:0,qtd:0}, Fevereiro:{valor:0,qtd:0}, Marco:{valor:0,qtd:0}, Abril:{valor:0,qtd:0}};
+  allTxs.forEach(t => {
+    if (porMes[t.mes]) { porMes[t.mes].valor += t.valor; porMes[t.mes].qtd++; }
+  });
+  const maxMes = Math.max(...Object.values(porMes).map(m=>m.valor), 1);
+  
+  // Funcionários
+  const passMap = new Map();
+  allTxs.forEach(t => {
+    if (!passMap.has(t.passageiro)) passMap.set(t.passageiro, {valor:0, qtd:0});
+    const p = passMap.get(t.passageiro); p.valor += t.valor; p.qtd++;
+  });
+  const pessoas = [...passMap.entries()].map(([n,d])=>({nome:n,...d})).sort((a,b)=>b.valor-a.valor);
+  
+  // Cidades
+  const cidMap = new Map();
+  allTxs.forEach(t => {
+    if (!cidMap.has(t.cidade)) cidMap.set(t.cidade, {valor:0, qtd:0});
+    const c = cidMap.get(t.cidade); c.valor += t.valor; c.qtd++;
+  });
+  const cidades = [...cidMap.entries()].map(([c,d])=>({cidade:c,...d})).sort((a,b)=>b.valor-a.valor);
+  
+  document.getElementById('modal-eyebrow').textContent = 'SETOR · 99';
+  document.getElementById('modal-title').textContent = setor;
+  document.getElementById('modal-meta').textContent =
+    `${fmt(total)} · ${qtd} corridas · ${pessoas.length} pessoas · ${pctEmpresa.toFixed(1)}% do total da 99`;
+  
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Pessoas</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${pessoas.length}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Corridas</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${qtd}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Cidades</div>
+        <div style="font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${cidades.length}</div>
+      </div>
+      <div style="background:${C99.bg};border-left:3px solid ${C99.primary};border-radius:var(--r-md);padding:12px 14px">
+        <div style="font-size:10px;color:var(--ink-5);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px">Ticket médio</div>
+        <div style="font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums">${fmt(total/qtd)}</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin:0 0 16px">
+      <div class="panel-h"><h3 style="font-size:13px">Evolução mensal · ${setor}</h3></div>
+      <div class="panel-body">
+        <div style="display:flex;align-items:flex-end;justify-content:space-around;height:120px;gap:12px;padding:10px 8px">
+          ${MESES_ORDER.map(m => {
+            const dm = porMes[m] || {valor:0,qtd:0};
+            const h = dm.valor === 0 ? 0 : (dm.valor/maxMes*100);
+            return `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="font-size:10px;color:var(--ink);font-weight:600">${dm.valor === 0 ? '—' : fmt(dm.valor)}</div>
+                <div style="width:100%;background:${dm.valor === 0 ? '#f3f4f6' : C99.primary};height:${Math.max(h,2)}%;border-radius:var(--r-sm) var(--r-sm) 0 0;min-height:4px"></div>
+                <div style="font-size:11px;color:var(--ink-5)">${m.substring(0,3)}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Pessoas em ${setor}</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Pessoa</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Qtd</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+            </tr></thead>
+            <tbody>${pessoas.map(p => `
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer" 
+                  onclick="closeModal();setTimeout(()=>open99FuncionarioModal('${p.nome.replace(/'/g,"\\'")}'), 250)"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${p.nome}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${p.qtd}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(p.valor)}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel" style="margin:0">
+        <div class="panel-h"><h3 style="font-size:13px">Cidades atendidas</h3></div>
+        <div class="panel-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Cidade</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Qtd</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+            </tr></thead>
+            <tbody>${cidades.map(c => `
+              <tr style="border-bottom:1px solid var(--line);cursor:pointer" 
+                  onclick="closeModal();setTimeout(()=>open99CidadeModal('${c.cidade.replace(/'/g,"\\'")}'), 250)"
+                  onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${c.cidade}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink-5)">${c.qtd}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(c.valor)}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="closeModal()" 
+              style="flex:1;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">
+        Fechar
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('show');
+}
+
+/* ============================================================================
+   ORDENAÇÃO DE TABELAS
+   ============================================================================ */
+const _99sortState = {};  // { tableId: {col: idx, dir: 'asc'|'desc'} }
+
+function _99sortTable(tableId, col, type) {
+  if (!_99sortState[tableId]) _99sortState[tableId] = {col: null, dir: 'desc'};
+  const state = _99sortState[tableId];
+  
+  if (state.col === col) {
+    state.dir = state.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.col = col;
+    state.dir = type === 'text' ? 'asc' : 'desc';
+  }
+  
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const tbody = table.querySelector('tbody');
+  const rows = [...tbody.querySelectorAll('tr')];
+  
+  rows.sort((a, b) => {
+    const aVal = a.cells[col].dataset.sort !== undefined
+      ? a.cells[col].dataset.sort
+      : a.cells[col].textContent.trim();
+    const bVal = b.cells[col].dataset.sort !== undefined
+      ? b.cells[col].dataset.sort
+      : b.cells[col].textContent.trim();
+    
+    let cmp;
+    if (type === 'number') {
+      cmp = parseFloat(aVal.replace(/[^\d.-]/g,'')) - parseFloat(bVal.replace(/[^\d.-]/g,''));
+    } else {
+      cmp = aVal.localeCompare(bVal, 'pt-BR');
+    }
+    return state.dir === 'asc' ? cmp : -cmp;
+  });
+  
+  rows.forEach(r => tbody.appendChild(r));
+  
+  // Atualiza setas dos cabeçalhos
+  table.querySelectorAll('th[data-sort-col]').forEach(th => {
+    const colIdx = parseInt(th.dataset.sortCol, 10);
+    const arrow = th.querySelector('.sort-arrow');
+    if (!arrow) return;
+    if (colIdx === col) {
+      arrow.textContent = state.dir === 'asc' ? '↑' : '↓';
+      arrow.style.opacity = '1';
+    } else {
+      arrow.textContent = '↕';
+      arrow.style.opacity = '0.3';
+    }
+  });
+}
+
+/* ============================================================================
+   HELPER: Constrói TH com seta clicável
+   ============================================================================ */
+function _99sortHeader(tableId, col, label, type, alignRight) {
+  const align = alignRight ? 'right' : 'left';
+  const just = alignRight ? 'flex-end' : 'flex-start';
+  return `<th data-sort-col="${col}" 
+              onclick="_99sortTable('${tableId}', ${col}, '${type}')"
+              style="text-align:${align};padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;cursor:pointer;user-select:none">
+    <span style="display:inline-flex;align-items:center;gap:4px;justify-content:${just};width:100%">
+      ${label}
+      <span class="sort-arrow" style="font-size:10px;opacity:0.3;transition:opacity var(--t-fast)">↕</span>
+    </span>
+  </th>`;
 }
 
 
