@@ -9717,53 +9717,223 @@ function render99PadraoUso() {
   const fmtBRL = (v) => 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
   const meses = ['Janeiro','Fevereiro','Marco','Abril'];
   const mesesLabel = ['Jan','Fev','Mar','Abr'];
+  const norm = (s) => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   
-  // Construir matriz funcionario x mes
+  // Construir matriz funcionario x mes (apenas dos que usaram)
   const matriz = {};
   d.porFuncionario.forEach(f => {
-    matriz[f.nome] = {Janeiro: 0, Fevereiro: 0, Marco: 0, Abril: 0, total: f.valor, qtd: f.qtd, setor: f.setor};
+    matriz[norm(f.nome)] = {nome: f.nome, Janeiro: 0, Fevereiro: 0, Marco: 0, Abril: 0, total: f.valor, qtd: f.qtd, setor: f.setor};
   });
   d.transacoes.forEach(t => {
-    if (matriz[t.passageiro]) matriz[t.passageiro][t.mes] += t.valor;
+    const k = norm(t.passageiro);
+    if (matriz[k]) matriz[k][t.mes] += t.valor;
   });
   
-  // Ordenar por valor total desc
-  const linhas = Object.entries(matriz)
-    .map(([nome, m]) => ({nome, ...m}))
-    .sort((a,b) => b.total - a.total);
+  // ADICIONAR cadastrados que nunca usaram (linha vazia)
+  (d.cadastrados.completos_nunca_usaram || []).forEach(c => {
+    const k = norm(c.nome);
+    if (!matriz[k]) {
+      matriz[k] = {nome: c.nome, Janeiro: 0, Fevereiro: 0, Marco: 0, Abril: 0, total: 0, qtd: 0, setor: ''};
+    }
+  });
+  
+  // Ordenar e adicionar status
+  const linhas = Object.values(matriz).map(l => {
+    const mesesAtivos = meses.filter(m => l[m] > 0).length;
+    let status, statusLabel;
+    if (mesesAtivos >= 3) { status = 'frequente'; statusLabel = 'Frequente'; }
+    else if (mesesAtivos >= 1) { status = 'esporadico'; statusLabel = 'Esporádico'; }
+    else { status = 'nunca'; statusLabel = 'Nunca usou'; }
+    return {...l, mesesAtivos, status, statusLabel};
+  });
+  
+  // Ordenar: primeiro por status (freq, esp, nunca), depois por total
+  const ordemStatus = {frequente: 0, esporadico: 1, nunca: 2};
+  linhas.sort((a, b) => {
+    if (ordemStatus[a.status] !== ordemStatus[b.status]) return ordemStatus[a.status] - ordemStatus[b.status];
+    return b.total - a.total;
+  });
+  
+  const ativos = linhas.filter(l => l.total > 0).length;
+  const frequentes = linhas.filter(l => l.status === 'frequente').length;
+  const esporadicos = linhas.filter(l => l.status === 'esporadico').length;
+  const nunca = linhas.filter(l => l.status === 'nunca').length;
   
   const kpis = [
-    {label: 'Funcionários ativos', value: linhas.length},
-    {label: 'Ativos em todos os 4 meses', value: linhas.filter(l => meses.every(m => l[m] > 0)).length},
-    {label: 'Apenas em 1 mês', value: linhas.filter(l => meses.filter(m => l[m] > 0).length === 1).length},
+    {label: 'Total cadastrados', value: linhas.length, sub: 'usaram + ociosos'},
+    {label: 'Frequentes', value: frequentes, sub: '3-4 meses ativos'},
+    {label: 'Esporádicos', value: esporadicos, sub: '1-2 meses ativos'},
+    {label: 'Nunca usaram', value: nunca, sub: 'cadastrados ociosos'},
   ];
   
-  return pageHeader99('Padrão de uso · 99', 'Matriz de gasto por funcionário e mês', kpis) + `
-    <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;min-width:700px">
+  // Cor por intensidade do valor (heatmap)
+  function cellColor(valor, max) {
+    if (!valor || valor === 0) return {bg: 'transparent', fg: '#d1d5db', val: '—'};
+    const pct = Math.min(valor / max, 1);
+    // Amarelo claro -> amarelo escuro
+    const alpha = 0.15 + pct * 0.55;
+    return {
+      bg: `rgba(255, 201, 0, ${alpha})`,
+      fg: pct > 0.6 ? '#5A4B00' : 'var(--ink)',
+      val: fmtBRL(valor)
+    };
+  }
+  
+  // Encontrar valor max por mês para normalizar cores
+  const maxPorMes = {};
+  meses.forEach(m => {
+    maxPorMes[m] = Math.max(...linhas.map(l => l[m] || 0), 1);
+  });
+  
+  return pageHeader99('Padrão de uso · 99', 'Matriz de gasto por funcionário e mês — todos cadastrados · Jan-Abr 2026', kpis) + `
+    <!-- Tabs filtro -->
+    <div style="display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:0;flex-wrap:wrap">
+      <button class="patrao99-tab active" data-tab="todos" onclick="set99PatraoTab('todos')" 
+              style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink);border-bottom:2px solid var(--ink);cursor:pointer;font-weight:500">
+        Todos (${linhas.length})
+      </button>
+      <button class="patrao99-tab" data-tab="ativos" onclick="set99PatraoTab('ativos')"
+              style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
+        ✓ Usaram (${ativos})
+      </button>
+      <button class="patrao99-tab" data-tab="frequente" onclick="set99PatraoTab('frequente')"
+              style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
+        🟢 Frequentes (${frequentes})
+      </button>
+      <button class="patrao99-tab" data-tab="esporadico" onclick="set99PatraoTab('esporadico')"
+              style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
+        🟡 Esporádicos (${esporadicos})
+      </button>
+      <button class="patrao99-tab" data-tab="nunca" onclick="set99PatraoTab('nunca')"
+              style="background:transparent;border:none;padding:10px 14px;font-size:13px;color:var(--ink-5);border-bottom:2px solid transparent;cursor:pointer">
+        🔴 Nunca usaram (${nunca})
+      </button>
+    </div>
+    
+    <div id="patrao99-content" style="background:white;border:1px solid var(--line);border-top:none;border-radius:0 0 12px 12px;padding:20px">
+      ${render99PatraoTab('todos', linhas, maxPorMes)}
+    </div>
+  `;
+}
+
+function render99PatraoTab(tab, linhas, maxPorMes) {
+  const fmtBRL = (v) => 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const meses = ['Janeiro','Fevereiro','Marco','Abril'];
+  const mesesLabel = ['Jan','Fev','Mar','Abr'];
+  
+  let lista = linhas;
+  if (tab === 'ativos') lista = linhas.filter(l => l.total > 0);
+  else if (tab === 'frequente') lista = linhas.filter(l => l.status === 'frequente');
+  else if (tab === 'esporadico') lista = linhas.filter(l => l.status === 'esporadico');
+  else if (tab === 'nunca') lista = linhas.filter(l => l.status === 'nunca');
+  
+  function cellColor(valor, max) {
+    if (!valor || valor === 0) return {bg: 'transparent', fg: '#d1d5db', val: '—'};
+    const pct = Math.min(valor / max, 1);
+    const alpha = 0.15 + pct * 0.55;
+    return {
+      bg: `rgba(255, 201, 0, ${alpha})`,
+      fg: pct > 0.6 ? '#5A4B00' : 'var(--ink)',
+      val: fmtBRL(valor)
+    };
+  }
+  
+  const tableId = 'tbl99patrao-' + tab;
+  return `
+    <div style="font-size:12px;color:var(--ink-5);margin-bottom:12px">
+      ${lista.length} ${lista.length === 1 ? 'pessoa' : 'pessoas'} · clique nas linhas ativas para drill-down · use as setas para ordenar
+    </div>
+    <div style="overflow-x:auto">
+      <table id="${tableId}" style="width:100%;border-collapse:collapse;min-width:880px">
         <thead>
           <tr style="border-bottom:1px solid var(--line)">
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Funcionário</th>
+            ${_99sortHeader(tableId, 0, 'Funcionário', 'text', false)}
             <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Setor</th>
-            ${mesesLabel.map(m => `<th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">${m}</th>`).join('')}
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;border-left:1px solid var(--line);padding-left:12px">Total</th>
+            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Status</th>
+            ${mesesLabel.map((m, i) => `${_99sortHeader(tableId, 3+i, m, 'number', true)}`).join('')}
+            ${_99sortHeader(tableId, 7, 'Total', 'number', true)}
           </tr>
         </thead>
         <tbody>
-          ${linhas.map(l => `
-            <tr style="border-bottom:1px solid var(--line)">
-              <td style="padding:8px;font-size:12px;color:var(--ink);font-weight:500">${l.nome}</td>
-              <td style="padding:8px;font-size:11px;color:var(--ink-5)">${l.setor || '—'}</td>
-              ${meses.map(m => `
-                <td style="padding:8px;font-size:12px;text-align:right;color:${l[m]>0 ? 'var(--ink)' : '#d1d5db'}">${l[m] > 0 ? fmtBRL(l[m]) : '—'}</td>
-              `).join('')}
-              <td style="padding:8px;font-size:12px;text-align:right;color:var(--ink);font-weight:600;border-left:1px solid var(--line);padding-left:12px">${fmtBRL(l.total)}</td>
-            </tr>
-          `).join('')}
+          ${lista.map(l => {
+            const isClickable = l.total > 0;
+            return `
+              <tr style="border-bottom:1px solid var(--line);${isClickable ? 'cursor:pointer;' : ''}transition:background var(--t-fast)" 
+                  ${isClickable ? `onclick="open99FuncionarioModal('${(l.nome||'').replace(/'/g,"\\'")}')"` : ''}
+                  ${isClickable ? `onmouseover="this.style.background='${C99.bg}'" onmouseout="this.style.background=''"` : ''}>
+                <td style="padding:8px;font-size:12px;color:var(--ink);font-weight:500">${l.nome}</td>
+                <td style="padding:8px;font-size:11px;color:var(--ink-5)">${l.setor || '—'}</td>
+                <td style="padding:8px">${_99statusBadge(l.status, l.statusLabel)}</td>
+                ${meses.map(m => {
+                  const v = l[m] || 0;
+                  const c = cellColor(v, maxPorMes[m]);
+                  return `<td data-sort="${v}" style="padding:8px;font-size:12px;text-align:right;color:${c.fg};background:${c.bg};font-weight:${v > 0 ? '600' : '400'}">${c.val}</td>`;
+                }).join('')}
+                <td data-sort="${l.total}" style="padding:8px;font-size:12px;text-align:right;color:${l.total > 0 ? 'var(--ink)' : '#d1d5db'};font-weight:700;border-left:1px solid var(--line);padding-left:12px">${l.total > 0 ? fmtBRL(l.total) : '—'}</td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       </table>
     </div>
   `;
+}
+
+function set99PatraoTab(tab) {
+  // Atualizar visual das tabs
+  document.querySelectorAll('.patrao99-tab').forEach(t => {
+    if (t.dataset.tab === tab) {
+      t.style.color = 'var(--ink)';
+      t.style.borderBottom = '2px solid var(--ink)';
+      t.style.fontWeight = '500';
+    } else {
+      t.style.color = 'var(--ink-5)';
+      t.style.borderBottom = '2px solid transparent';
+      t.style.fontWeight = '400';
+    }
+  });
+  
+  // Re-render conteúdo (precisa recalcular linhas)
+  const d = D99();
+  const meses = ['Janeiro','Fevereiro','Marco','Abril'];
+  const norm = (s) => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  
+  const matriz = {};
+  d.porFuncionario.forEach(f => {
+    matriz[norm(f.nome)] = {nome: f.nome, Janeiro: 0, Fevereiro: 0, Marco: 0, Abril: 0, total: f.valor, qtd: f.qtd, setor: f.setor};
+  });
+  d.transacoes.forEach(t => {
+    const k = norm(t.passageiro);
+    if (matriz[k]) matriz[k][t.mes] += t.valor;
+  });
+  (d.cadastrados.completos_nunca_usaram || []).forEach(c => {
+    const k = norm(c.nome);
+    if (!matriz[k]) {
+      matriz[k] = {nome: c.nome, Janeiro: 0, Fevereiro: 0, Marco: 0, Abril: 0, total: 0, qtd: 0, setor: ''};
+    }
+  });
+  
+  const linhas = Object.values(matriz).map(l => {
+    const mesesAtivos = meses.filter(m => l[m] > 0).length;
+    let status, statusLabel;
+    if (mesesAtivos >= 3) { status = 'frequente'; statusLabel = 'Frequente'; }
+    else if (mesesAtivos >= 1) { status = 'esporadico'; statusLabel = 'Esporádico'; }
+    else { status = 'nunca'; statusLabel = 'Nunca usou'; }
+    return {...l, mesesAtivos, status, statusLabel};
+  });
+  
+  const ordemStatus = {frequente: 0, esporadico: 1, nunca: 2};
+  linhas.sort((a, b) => {
+    if (ordemStatus[a.status] !== ordemStatus[b.status]) return ordemStatus[a.status] - ordemStatus[b.status];
+    return b.total - a.total;
+  });
+  
+  const maxPorMes = {};
+  meses.forEach(m => {
+    maxPorMes[m] = Math.max(...linhas.map(l => l[m] || 0), 1);
+  });
+  
+  document.getElementById('patrao99-content').innerHTML = render99PatraoTab(tab, linhas, maxPorMes);
 }
 
 // === Aba: Cadastrados 99 vs uso ===
@@ -9820,7 +9990,7 @@ function render99CadastradosVsUso() {
     {label: 'Incompletos', value: incompletos, sub: 'apelidos/genéricos'},
   ];
   
-  return pageHeader99('Cadastro 99 vs uso real', 'Todos os cadastrados com status de uso e drill-down por funcionário', kpis) + `
+  return pageHeader99('Cadastro 99 vs uso real', 'Todos os cadastrados com status de uso · período Janeiro a Abril de 2026', kpis) + `
     <!-- Comparação Uber vs 99 -->
     <div style="background:${C99.bg};border:1px solid ${C99.border};border-radius:12px;padding:16px 20px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;color:${C99.ink};margin-bottom:8px">⚠️ Comparação com a Uber</div>
@@ -9830,6 +10000,21 @@ function render99CadastradosVsUso() {
         <div style="margin-top:8px;font-size:12px;color:var(--ink-5)">A 99 tem proporcionalmente quase o dobro de cadastros ociosos.</div>
       </div>
     </div>
+    
+    <!-- Explicação sobre os incompletos -->
+    <details style="background:white;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:20px">
+      <summary style="font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px">
+        <span style="display:inline-block;transition:transform 0.2s">▶</span>
+        ℹ️ O que são "Cadastros incompletos"?
+      </summary>
+      <div style="font-size:13px;color:var(--ink-5);line-height:1.6;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
+        São <strong>${incompletos}</strong> entradas na lista oficial da 99 que vieram <strong>só com o primeiro nome ou identificador genérico</strong>, sem sobrenome ou telefone. Como a empresa tem várias pessoas com nomes parecidos (vários "Bruno", "Vitor", "Sandro"...), é impossível saber a qual funcionário cada cadastro corresponde.
+        <br><br>
+        <strong>Sugestão de ação:</strong> revisar esses cadastros no painel da 99 e completar os dados (nome completo + telefone) ou removê-los para evitar lançamentos sem identificação.
+        <br><br>
+        <strong>Período analisado:</strong> Janeiro a Abril de 2026. Quem está como "Nunca usou" pode ter usado em períodos anteriores, mas não temos dados desses meses.
+      </div>
+    </details>
     
     <!-- Tabs de filtro -->
     <div style="display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:0;flex-wrap:wrap">
@@ -10323,31 +10508,35 @@ function renderCmpFuncionarios() {
     {label: 'Só 99', value: so99.length},
   ];
   
-  return pageHeaderCmp('Funcionários · Uber × 99', 'Comparação dos consumidores nas duas plataformas', kpis) + `
+  return pageHeaderCmp('Funcionários · Uber × 99', 'Comparação dos consumidores nas duas plataformas — clique no funcionário para ver histórico combinado', kpis) + `
     <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;min-width:700px">
+      <table id="tblCmpFuncs" style="width:100%;border-collapse:collapse;min-width:800px">
         <thead>
           <tr style="border-bottom:1px solid var(--line)">
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">#</th>
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Funcionário</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:${CCMP.uberDark};font-weight:600;text-transform:uppercase">Uber</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:${CCMP.n99Dark};font-weight:600;text-transform:uppercase">99</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;border-left:1px solid var(--line);padding-left:12px">Total</th>
+            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;width:30px">#</th>
+            ${_99sortHeader('tblCmpFuncs', 1, 'Funcionário', 'text', false)}
+            ${_99sortHeader('tblCmpFuncs', 2, 'Uber', 'number', true)}
+            ${_99sortHeader('tblCmpFuncs', 3, '99', 'number', true)}
+            ${_99sortHeader('tblCmpFuncs', 4, 'Total', 'number', true)}
             <th style="text-align:center;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Plataformas</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;width:40px"></th>
           </tr>
         </thead>
         <tbody>
           ${lista.map((p, i) => `
-            <tr style="border-bottom:1px solid var(--line)">
+            <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background var(--t-fast)" 
+                onclick="openComboFuncionarioModal('${(p.nome||'').replace(/'/g,"\\'")}')"
+                onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
               <td style="padding:10px 8px;font-size:13px;color:var(--ink-5)">${i+1}</td>
               <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${p.nome}</td>
-              <td style="padding:10px 8px;font-size:13px;text-align:right;color:${p.uberValor>0?'var(--ink)':'#d1d5db'}">${p.uberValor>0?fmtBRL(p.uberValor):'—'}</td>
-              <td style="padding:10px 8px;font-size:13px;text-align:right;color:${p.n99Valor>0?'var(--ink)':'#d1d5db'}">${p.n99Valor>0?fmtBRL(p.n99Valor):'—'}</td>
-              <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:700;border-left:1px solid var(--line);padding-left:12px">${fmtBRL(p.total)}</td>
+              <td data-sort="${p.uberValor}" style="padding:10px 8px;font-size:13px;text-align:right;color:${p.uberValor>0?'var(--ink)':'#d1d5db'}">${p.uberValor>0?fmtBRL(p.uberValor):'—'}</td>
+              <td data-sort="${p.n99Valor}" style="padding:10px 8px;font-size:13px;text-align:right;color:${p.n99Valor>0?'var(--ink)':'#d1d5db'}">${p.n99Valor>0?fmtBRL(p.n99Valor):'—'}</td>
+              <td data-sort="${p.total}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:700;border-left:1px solid var(--line);padding-left:12px">${fmtBRL(p.total)}</td>
               <td style="padding:10px 8px;text-align:center">
                 ${p.uberValor>0?`<span style="display:inline-block;width:14px;height:14px;background:${CCMP.uber};border-radius:50%;margin-right:2px" title="Uber"></span>`:'<span style="display:inline-block;width:14px;height:14px;background:#e5e7eb;border-radius:50%;margin-right:2px"></span>'}
                 ${p.n99Valor>0?`<span style="display:inline-block;width:14px;height:14px;background:${CCMP.n99};border-radius:50%" title="99"></span>`:'<span style="display:inline-block;width:14px;height:14px;background:#e5e7eb;border-radius:50%"></span>'}
               </td>
+              <td style="padding:10px 8px;text-align:center;color:var(--ink-5);font-size:14px">→</td>
             </tr>
           `).join('')}
         </tbody>
@@ -10373,38 +10562,98 @@ function renderCmpCidades() {
     mapa[c.cidade].n99Qtd = c.qtd;
   });
   
-  const lista = Object.values(mapa).map(c => ({...c, total: c.uberValor + c.n99Valor})).sort((a,b) => b.total - a.total);
+  const lista = Object.values(mapa).map(c => ({
+    ...c, 
+    total: c.uberValor + c.n99Valor,
+    qtdTotal: c.uberQtd + c.n99Qtd
+  })).sort((a,b) => b.total - a.total);
   
   const ambas = lista.filter(c => c.uberValor > 0 && c.n99Valor > 0);
+  const soUber = lista.filter(c => c.uberValor > 0 && c.n99Valor === 0);
+  const so99 = lista.filter(c => c.uberValor === 0 && c.n99Valor > 0);
+  const totalCombinado = lista.reduce((s,c) => s + c.total, 0);
+  const maxTotal = lista[0]?.total || 1;
+  
   const kpis = [
-    {label: 'Cidades distintas', value: lista.length},
-    {label: 'Cobertas pelas 2', value: ambas.length},
-    {label: 'Só Uber', value: lista.filter(c => c.uberValor > 0 && c.n99Valor === 0).length},
-    {label: 'Só 99', value: lista.filter(c => c.uberValor === 0 && c.n99Valor > 0).length},
+    {label: 'Cidades distintas', value: lista.length, sub: 'somando as 2 plataformas'},
+    {label: 'Atendidas pelas 2', value: ambas.length, sub: 'cobertura total'},
+    {label: 'Só Uber', value: soUber.length, sub: '99 não cobre'},
+    {label: 'Só 99', value: so99.length, sub: 'Uber não cobre'},
   ];
   
-  return pageHeaderCmp('Cidades · Uber × 99', 'Cobertura geográfica comparada das duas plataformas', kpis) + `
+  return pageHeaderCmp('Cidades · Uber × 99', 'Cobertura geográfica comparada — clique para drill-down · Jan-Abr 2026', kpis) + `
+    <!-- Insight box -->
+    <div style="background:#dcfce7;border:1px solid #86efac;border-radius:12px;padding:14px 18px;margin-bottom:18px">
+      <div style="font-size:13px;color:#166534;line-height:1.6">
+        <strong>📍 Insight de cobertura:</strong> A Uber atende ${(soUber.length + ambas.length)} cidades, a 99 só ${(so99.length + ambas.length)}. 
+        Em <strong>Salvador</strong> as duas competem (R$ ${(mapa['Salvador']?.uberValor||0).toLocaleString('pt-BR')} Uber vs R$ ${(mapa['Salvador']?.n99Valor||0).toLocaleString('pt-BR')} 99).
+        ${soUber.length > 0 ? `<strong>${soUber.length} cidades</strong> só usam Uber porque a 99 não opera lá: ${soUber.slice(0,4).map(c=>c.cidade).join(', ')}${soUber.length > 4 ? '…' : ''}.` : ''}
+      </div>
+    </div>
+    
+    <!-- Tabela com barras visuais lado a lado -->
     <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse">
+      <table id="tblCmpCidades" style="width:100%;border-collapse:collapse;min-width:900px">
         <thead>
           <tr style="border-bottom:1px solid var(--line)">
-            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Cidade</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:${CCMP.uberDark};font-weight:600;text-transform:uppercase">Uber</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:${CCMP.n99Dark};font-weight:600;text-transform:uppercase">99</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;border-left:1px solid var(--line);padding-left:12px">Total</th>
+            ${_99sortHeader('tblCmpCidades', 0, 'Cidade', 'text', false)}
+            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase">Cobertura</th>
+            ${_99sortHeader('tblCmpCidades', 2, 'Uber', 'number', true)}
+            ${_99sortHeader('tblCmpCidades', 3, '99', 'number', true)}
+            ${_99sortHeader('tblCmpCidades', 4, 'Total', 'number', true)}
+            <th style="text-align:left;padding:10px 8px;font-size:11px;color:var(--ink-5);font-weight:500;text-transform:uppercase;width:200px">Distribuição</th>
+            ${_99sortHeader('tblCmpCidades', 6, '% do total', 'number', true)}
           </tr>
         </thead>
         <tbody>
-          ${lista.map(c => `
-            <tr style="border-bottom:1px solid var(--line)">
-              <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${c.cidade}</td>
-              <td style="padding:10px 8px;font-size:13px;text-align:right;color:${c.uberValor>0?'var(--ink)':'#d1d5db'}">${c.uberValor>0?fmtBRL(c.uberValor):'—'}<div style="font-size:10px;color:var(--ink-5)">${c.uberQtd>0?c.uberQtd+' corridas':''}</div></td>
-              <td style="padding:10px 8px;font-size:13px;text-align:right;color:${c.n99Valor>0?'var(--ink)':'#d1d5db'}">${c.n99Valor>0?fmtBRL(c.n99Valor):'—'}<div style="font-size:10px;color:var(--ink-5)">${c.n99Qtd>0?c.n99Qtd+' corridas':''}</div></td>
-              <td style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:700;border-left:1px solid var(--line);padding-left:12px">${fmtBRL(c.total)}</td>
-            </tr>
-          `).join('')}
+          ${lista.map(c => {
+            const pct = (c.total / totalCombinado * 100);
+            const barW = (c.total / maxTotal * 100);
+            const uberPct = c.total > 0 ? (c.uberValor / c.total * 100) : 0;
+            const n99Pct = c.total > 0 ? (c.n99Valor / c.total * 100) : 0;
+            
+            let coberturaHtml = '';
+            if (c.uberValor > 0 && c.n99Valor > 0) {
+              coberturaHtml = `<span style="display:inline-flex;align-items:center;gap:5px;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap"><span style="width:6px;height:6px;background:#16a34a;border-radius:50%"></span>Ambas</span>`;
+            } else if (c.uberValor > 0) {
+              coberturaHtml = `<span style="display:inline-flex;align-items:center;gap:5px;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap"><span style="width:6px;height:6px;background:#0066ff;border-radius:50%"></span>Só Uber</span>`;
+            } else {
+              coberturaHtml = `<span style="display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap"><span style="width:6px;height:6px;background:#FFC900;border-radius:50%"></span>Só 99</span>`;
+            }
+            
+            const isClickable = c.n99Valor > 0;  // Só pode drill na 99 (Uber não tem modal de cidade comparativa)
+            
+            return `
+              <tr style="border-bottom:1px solid var(--line);${isClickable ? 'cursor:pointer;' : ''}transition:background var(--t-fast)" 
+                  ${isClickable ? `onclick="open99CidadeModal('${c.cidade.replace(/'/g,"\\'")}')"` : ''}
+                  ${isClickable ? `onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''"` : ''}>
+                <td style="padding:10px 8px;font-size:13px;color:var(--ink);font-weight:500">${c.cidade}${isClickable ? ' →' : ''}</td>
+                <td style="padding:10px 8px">${coberturaHtml}</td>
+                <td data-sort="${c.uberValor}" style="padding:10px 8px;font-size:13px;text-align:right;color:${c.uberValor>0?'var(--ink)':'#d1d5db'}">
+                  ${c.uberValor>0?fmtBRL(c.uberValor):'—'}
+                  ${c.uberQtd>0?`<div style="font-size:10px;color:var(--ink-5)">${c.uberQtd} corridas</div>`:''}
+                </td>
+                <td data-sort="${c.n99Valor}" style="padding:10px 8px;font-size:13px;text-align:right;color:${c.n99Valor>0?'var(--ink)':'#d1d5db'}">
+                  ${c.n99Valor>0?fmtBRL(c.n99Valor):'—'}
+                  ${c.n99Qtd>0?`<div style="font-size:10px;color:var(--ink-5)">${c.n99Qtd} corridas</div>`:''}
+                </td>
+                <td data-sort="${c.total}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink);font-weight:700;border-left:1px solid var(--line);padding-left:12px">${fmtBRL(c.total)}</td>
+                <td style="padding:10px 8px">
+                  <div style="display:flex;height:14px;border-radius:3px;overflow:hidden;background:#f3f4f6;width:${barW}%;min-width:30px">
+                    ${c.uberValor > 0 ? `<div style="background:#0066ff;width:${uberPct}%;min-width:${uberPct > 0 ? '2px' : '0'}"></div>` : ''}
+                    ${c.n99Valor > 0 ? `<div style="background:#FFC900;width:${n99Pct}%;min-width:${n99Pct > 0 ? '2px' : '0'}"></div>` : ''}
+                  </div>
+                </td>
+                <td data-sort="${pct}" style="padding:10px 8px;font-size:13px;text-align:right;color:var(--ink-5)">${pct.toFixed(1)}%</td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       </table>
+      <div style="display:flex;justify-content:flex-end;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-5)">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#0066ff;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Uber</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#FFC900;border-radius:2px;margin-right:4px;vertical-align:middle"></span>99</span>
+      </div>
     </div>
   `;
 }
@@ -10450,13 +10699,15 @@ function renderCmpTop() {
         const widthUber = widthTotal * (uberPct / 100);
         const widthN99 = widthTotal * (n99Pct / 100);
         return `
-          <div style="margin-bottom:14px">
+          <div style="margin-bottom:14px;cursor:pointer;padding:8px;margin:6px -8px;border-radius:8px;transition:background var(--t-fast)" 
+               onclick="openComboFuncionarioModal('${(p.nome||'').replace(/'/g,"\\'")}')"
+               onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <div style="display:flex;align-items:center;gap:8px">
                 <span style="font-size:11px;color:var(--ink-5);min-width:18px">#${i+1}</span>
                 <span style="font-size:13px;color:var(--ink);font-weight:500">${p.nome}</span>
               </div>
-              <span style="font-size:13px;color:var(--ink);font-weight:600">${fmtBRL(p.total)}</span>
+              <span style="font-size:13px;color:var(--ink);font-weight:600">${fmtBRL(p.total)} →</span>
             </div>
             <div style="display:flex;height:18px;border-radius:4px;overflow:hidden;background:#f3f4f6">
               ${p.uberValor > 0 ? `<div style="background:${CCMP.uber};width:${widthUber}%" title="Uber: ${fmtBRL(p.uberValor)}"></div>` : ''}
@@ -11229,6 +11480,224 @@ function _99sortHeader(tableId, col, label, type, alignRight) {
       <span class="sort-arrow" style="font-size:10px;opacity:0.3;transition:opacity var(--t-fast)">↕</span>
     </span>
   </th>`;
+}
+
+/* ============================================================================
+   MODAL COMBINADO UBER + 99 (drill-down do funcionário nas duas plataformas)
+   ============================================================================ */
+function openComboFuncionarioModal(nome) {
+  const fmt = (v) => 'R$ ' + Number(v||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const norm = (s) => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const nomeNorm = norm(nome);
+  
+  // Buscar transações nas DUAS plataformas
+  const uberTxs = (DATA.transacoes || []).filter(t => norm(t.passageiro) === nomeNorm);
+  const n99Txs = (DATA.plataforma99.transacoes || []).filter(t => norm(t.passageiro) === nomeNorm);
+  
+  const uberTotal = uberTxs.filter(t => t.tipo === 'Fare').reduce((s,t)=>s+t.valor, 0);
+  const uberQtd = uberTxs.filter(t => t.tipo === 'Fare').length;
+  const n99Total = n99Txs.reduce((s,t)=>s+t.valor, 0);
+  const n99Qtd = n99Txs.length;
+  const totalCombo = uberTotal + n99Total;
+  const qtdCombo = uberQtd + n99Qtd;
+  
+  // Por mês: matriz Uber/99 x mês
+  const meses = ['Janeiro','Fevereiro','Marco','Março','Abril'];
+  const porMes = {Janeiro:{u:0,n:0,uq:0,nq:0}, Fevereiro:{u:0,n:0,uq:0,nq:0}, Marco:{u:0,n:0,uq:0,nq:0}, Abril:{u:0,n:0,uq:0,nq:0}};
+  uberTxs.forEach(t => {
+    const m = (t.mes === 'Março') ? 'Marco' : t.mes;
+    if (porMes[m] && t.tipo === 'Fare') { porMes[m].u += t.valor; porMes[m].uq++; }
+  });
+  n99Txs.forEach(t => {
+    if (porMes[t.mes]) { porMes[t.mes].n += t.valor; porMes[t.mes].nq++; }
+  });
+  
+  // Cidades combinadas
+  const cidMap = new Map();
+  uberTxs.filter(t=>t.tipo==='Fare').forEach(t => {
+    if (!cidMap.has(t.cidade)) cidMap.set(t.cidade, {cidade: t.cidade, u:0, uq:0, n:0, nq:0});
+    const c = cidMap.get(t.cidade); c.u += t.valor; c.uq++;
+  });
+  n99Txs.forEach(t => {
+    if (!cidMap.has(t.cidade)) cidMap.set(t.cidade, {cidade: t.cidade, u:0, uq:0, n:0, nq:0});
+    const c = cidMap.get(t.cidade); c.n += t.valor; c.nq++;
+  });
+  const cidades = [...cidMap.values()].sort((a,b)=>(b.u+b.n)-(a.u+a.n));
+  
+  // Setor (vem da 99)
+  const setor = n99Txs[0]?.setor || '—';
+  const email = n99Txs[0]?.email || uberTxs[0]?.email || '';
+  
+  // Determinar plataformas usadas
+  let badges = '';
+  if (uberTotal > 0) badges += `<span style="display:inline-flex;align-items:center;gap:4px;background:#dbeafe;color:#1e40af;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;margin-right:6px"><span style="width:6px;height:6px;background:#0066ff;border-radius:50%"></span>Uber Business</span>`;
+  if (n99Total > 0) badges += `<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600"><span style="width:6px;height:6px;background:#FFC900;border-radius:50%"></span>99 Corporativo</span>`;
+  
+  // Maiores
+  const allSorted = [
+    ...uberTxs.filter(t=>t.tipo==='Fare').map(t=>({...t, plat: 'uber'})),
+    ...n99Txs.map(t=>({...t, plat: 'n99'}))
+  ].sort((a,b)=>b.valor-a.valor);
+  
+  document.getElementById('modal-eyebrow').textContent = 'FUNCIONÁRIO · UBER × 99';
+  document.getElementById('modal-title').textContent = nome;
+  document.getElementById('modal-meta').innerHTML = `${badges} · ${setor !== '—' ? setor + ' · ' : ''}${fmt(totalCombo)} · ${qtdCombo} corridas combinadas`;
+  
+  const maxMes = Math.max(...Object.values(porMes).map(m => m.u + m.n), 1);
+  
+  document.getElementById('modal-body').innerHTML = `
+    <!-- Cards lado a lado: Uber e 99 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <!-- Card UBER -->
+      <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:var(--r-md);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <span style="width:8px;height:8px;background:#0066ff;border-radius:50%"></span>
+          <span style="font-size:11px;color:#1e40af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Uber Business</span>
+        </div>
+        ${uberTotal > 0 ? `
+          <div style="font-size:22px;font-weight:700;color:#1e40af;margin-bottom:4px">${fmt(uberTotal)}</div>
+          <div style="font-size:11px;color:#1e40af;opacity:0.8">${uberQtd} corridas · ticket ${fmt(uberTotal/uberQtd)}</div>
+          <div style="margin-top:8px;font-size:11px;color:#1e40af;opacity:0.8">${(uberTotal/totalCombo*100).toFixed(0)}% do total combinado</div>
+        ` : `
+          <div style="font-size:14px;color:#94a3b8;font-style:italic;padding:8px 0">Não usa esta plataforma</div>
+        `}
+      </div>
+      
+      <!-- Card 99 -->
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--r-md);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <span style="width:8px;height:8px;background:#FFC900;border-radius:50%"></span>
+          <span style="font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">99 Corporativo</span>
+        </div>
+        ${n99Total > 0 ? `
+          <div style="font-size:22px;font-weight:700;color:#92400e;margin-bottom:4px">${fmt(n99Total)}</div>
+          <div style="font-size:11px;color:#92400e;opacity:0.8">${n99Qtd} corridas · ticket ${fmt(n99Total/n99Qtd)}</div>
+          <div style="margin-top:8px;font-size:11px;color:#92400e;opacity:0.8">${(n99Total/totalCombo*100).toFixed(0)}% do total combinado</div>
+        ` : `
+          <div style="font-size:14px;color:#94a3b8;font-style:italic;padding:8px 0">Não usa esta plataforma</div>
+        `}
+      </div>
+    </div>
+    
+    <!-- Total combinado destaque -->
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:11px;color:#166534;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Total combinado em mobilidade</div>
+        <div style="font-size:24px;font-weight:700;color:#166534">${fmt(totalCombo)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#166534;opacity:0.8">${qtdCombo} corridas · ${cidades.length} ${cidades.length === 1 ? 'cidade' : 'cidades'}</div>
+        <div style="font-size:11px;color:#166534;opacity:0.8">ticket médio ${fmt(totalCombo/qtdCombo)}</div>
+      </div>
+    </div>
+    
+    <!-- Evolução mensal: barras lado a lado Uber/99 -->
+    <div class="panel" style="margin:0 0 16px">
+      <div class="panel-h"><h3 style="font-size:13px">Evolução mensal · Uber vs 99</h3></div>
+      <div class="panel-body">
+        <div style="display:flex;align-items:flex-end;justify-content:space-around;height:160px;gap:12px;padding:10px 8px">
+          ${['Janeiro','Fevereiro','Marco','Abril'].map(m => {
+            const dm = porMes[m];
+            const total = dm.u + dm.n;
+            const totalH = total === 0 ? 0 : (total/maxMes*100);
+            const uH = total === 0 ? 0 : (dm.u/total*100);
+            const nH = total === 0 ? 0 : (dm.n/total*100);
+            return `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="font-size:10px;color:var(--ink);font-weight:600;text-align:center">
+                  ${total === 0 ? '—' : fmt(total)}
+                </div>
+                <div style="width:100%;height:${Math.max(totalH,2)}%;display:flex;flex-direction:column;border-radius:var(--r-sm) var(--r-sm) 0 0;overflow:hidden;min-height:4px;background:${total === 0 ? '#f3f4f6' : 'transparent'}">
+                  ${dm.u > 0 ? `<div style="background:#0066ff;height:${uH}%;min-height:2px" title="Uber: ${fmt(dm.u)}"></div>` : ''}
+                  ${dm.n > 0 ? `<div style="background:#FFC900;height:${nH}%;min-height:2px" title="99: ${fmt(dm.n)}"></div>` : ''}
+                </div>
+                <div style="font-size:11px;color:var(--ink-5)">${m === 'Marco' ? 'Mar' : m.substring(0,3)}</div>
+              </div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex;justify-content:center;gap:18px;margin-top:8px;font-size:11px;color:var(--ink-5)">
+          <span><span style="display:inline-block;width:10px;height:10px;background:#0066ff;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Uber</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#FFC900;border-radius:2px;margin-right:4px;vertical-align:middle"></span>99</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cidades combinadas -->
+    <div class="panel" style="margin:0 0 16px">
+      <div class="panel-h"><h3 style="font-size:13px">Cidades atendidas</h3></div>
+      <div class="panel-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Cidade</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:#1e40af;font-weight:600;text-transform:uppercase">Uber</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:#92400e;font-weight:600;text-transform:uppercase">99</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${cidades.map(c => `
+              <tr style="border-bottom:1px solid var(--line)">
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink);font-weight:500">${c.cidade}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:${c.u > 0 ? '#1e40af' : '#d1d5db'}">${c.u > 0 ? fmt(c.u) + ' (' + c.uq + ')' : '—'}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:${c.n > 0 ? '#92400e' : '#d1d5db'}">${c.n > 0 ? fmt(c.n) + ' (' + c.nq + ')' : '—'}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:700">${fmt(c.u + c.n)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    ${allSorted.length > 0 ? `
+    <!-- Top 5 maiores corridas -->
+    <div class="panel" style="margin:0 0 16px">
+      <div class="panel-h"><h3 style="font-size:13px">5 maiores corridas combinadas</h3></div>
+      <div class="panel-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Plataforma</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Mês</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Cidade</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Serviço</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10px;color:var(--ink-5);font-weight:600;text-transform:uppercase">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${allSorted.slice(0, 5).map(t => `
+              <tr style="border-bottom:1px solid var(--line)">
+                <td style="padding:8px 12px;font-size:12px">
+                  ${t.plat === 'uber' 
+                    ? '<span style="display:inline-flex;align-items:center;gap:4px;color:#1e40af;font-weight:500;font-size:11px"><span style="width:6px;height:6px;background:#0066ff;border-radius:50%"></span>Uber</span>'
+                    : '<span style="display:inline-flex;align-items:center;gap:4px;color:#92400e;font-weight:500;font-size:11px"><span style="width:6px;height:6px;background:#FFC900;border-radius:50%"></span>99</span>'
+                  }
+                </td>
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink-5)">${(t.mes === 'Marco' ? 'Março' : t.mes).substring(0,3)}</td>
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink-5)">${t.cidade || '—'}</td>
+                <td style="padding:8px 12px;font-size:12px;color:var(--ink-5)">${t.servico || t.categoria || '—'}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:right;color:var(--ink);font-weight:600">${fmt(t.valor)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    ` : ''}
+    
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="closeModal();setFilter('passageiro', '${nome.replace(/'/g,"\\'")}')" 
+              style="flex:1;background:#16a34a;color:white;border:none;border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">
+        Aplicar filtro · Ver só ${nome.split(' ')[0]}
+      </button>
+      <button onclick="closeModal()" 
+              style="flex:0 0 120px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">
+        Fechar
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('show');
 }
 
 
